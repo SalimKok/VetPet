@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'api_service.dart';
 
 class ClinicService {
-  // Tüm klinikleri getir
+
   static Future<List<Map<String, dynamic>>> getClinics() async {
     final url = Uri.parse("${ApiService.baseUrl}/clinics");
     final response = await http.get(url);
@@ -36,13 +36,15 @@ class ClinicService {
     return [];
   }
 
-  // Yeni klinik ekle
   static Future<bool> createClinic({
     required String name,
-    String? address,
+    required int vetId,
+    int? cityId,
+    int? districtId,
+    // Neighbourhood yok
+    String? addressDetails,
     String? phone,
     String? workingHours,
-    required int vetId,
   }) async {
     final url = Uri.parse("${ApiService.baseUrl}/clinics");
     final response = await http.post(
@@ -50,21 +52,23 @@ class ClinicService {
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "name": name,
-        "address": address,
+        "vet_id": vetId,
+        "city_id": cityId,
+        "district_id": districtId,
+        "address_details": addressDetails,
         "phone": phone,
         "working_hours": workingHours,
-        "vet_id": vetId,
       }),
     );
-
     return response.statusCode == 201;
   }
 
-  // Klinik güncelle
   static Future<bool> updateClinic({
     required int clinicId,
     String? name,
-    String? address,
+    int? cityId,
+    int? districtId,
+    String? addressDetails,
     String? phone,
     String? workingHours,
   }) async {
@@ -74,16 +78,16 @@ class ClinicService {
       headers: {"Content-Type": "application/json"},
       body: jsonEncode({
         "name": name,
-        "address": address,
+        "city_id": cityId,
+        "district_id": districtId,
+        "address_details": addressDetails,
         "phone": phone,
         "working_hours": workingHours,
       }),
     );
-
     return response.statusCode == 200;
   }
 
-  // Klinik sil
   static Future<bool> deleteClinic(int clinicId) async {
     final url = Uri.parse("${ApiService.baseUrl}/clinics/$clinicId");
     final response = await http.delete(url);
