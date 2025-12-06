@@ -1,66 +1,93 @@
 from flask import Blueprint, request, jsonify
 from extensions import db
-from models.users import users  # users modelin
 from models.clinics import Clinic
+from models.users import users # Veteriner kontrolü için gerekli
 
 clinic_bp = Blueprint('clinics', __name__)
 
-# Tüm klinikleri listele
+# ---------------------------------------------------------
+# 1. TÜM KLİNİKLERİ GETİR
+# ---------------------------------------------------------
 @clinic_bp.route('/clinics', methods=['GET'])
 def get_clinics():
-    clinics = Clinic.query.all()
-    result = [c.to_dict() for c in clinics]
-    return jsonify({"success": True, "clinics": result}), 200
+    try:
+        clinics = Clinic.query.all()
+        # Modeldeki to_dict() metodu il/ilçe isimlerini otomatik doldurur
+        result = [c.to_dict() for c in clinics]
+        return jsonify({"success": True, "clinics": result}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
-
-# Belirli bir klinik
+# ---------------------------------------------------------
+# 2. TEK BİR KLİNİĞİ GETİR (ID'ye göre)
+# ---------------------------------------------------------
 @clinic_bp.route('/clinics/<int:clinic_id>', methods=['GET'])
 def get_clinic(clinic_id):
-    clinic = Clinic.query.get(clinic_id)
-    if not clinic:
-        return jsonify({"success": False, "message": "Klinik bulunamadı"}), 404
-    return jsonify({"success": True, "clinic": clinic.to_dict()}), 200
+    try:
+        clinic = Clinic.query.get(clinic_id)
+        if not clinic:
+            return jsonify({"success": False, "message": "Klinik bulunamadı"}), 404
+        
+        return jsonify({"success": True, "clinic": clinic.to_dict()}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
-
-# Veterinerin kliniklerini listele
+# ---------------------------------------------------------
+# 3. BİR VETERİNERE AİT KLİNİKLERİ GETİR
+# ---------------------------------------------------------
 @clinic_bp.route('/vets/<int:vet_id>/clinics', methods=['GET'])
 def get_vet_clinics(vet_id):
-    vet = users.query.filter_by(id=vet_id, role='vet').first()
-    if not vet:
-        return jsonify({"success": False, "message": "Veteriner bulunamadı"}), 404
+    try:
+        # Önce veteriner var mı kontrol et
+        vet = users.query.filter_by(id=vet_id).first() # role='vet' kontrolü de eklenebilir
+        if not vet:
+            return jsonify({"success": False, "message": "Veteriner bulunamadı"}), 404
 
-    clinics = Clinic.query.filter_by(vet_id=vet.id).all()
-    result = [c.to_dict() for c in clinics]
-    return jsonify({"success": True, "clinics": result}), 200
+        # O veterinere ait klinikleri bul
+        clinics = Clinic.query.filter_by(vet_id=vet_id).all()
+        result = [c.to_dict() for c in clinics]
+        
+        return jsonify({"success": True, "clinics": result}), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
 
-
-# Yeni klinik ekle
+# ---------------------------------------------------------
+# 4. YENİ KLİNİK EKLE (POST)
+# ---------------------------------------------------------
 @clinic_bp.route('/clinics', methods=['POST'])
 def create_clinic():
     data = request.get_json()
     name = data.get('name')
-    address = data.get('address')
-    phone = data.get('phone')
-    working_hours = data.get('working_hours')
     vet_id = data.get('vet_id')
-
+    
     if not all([name, vet_id]):
-        return jsonify({"success": False, "message": "Klinik adı ve veteriner gerekli"}), 400
+        return jsonify({"success": False, "message": "Klinik adı ve veteriner ID gerekli"}), 400
 
     clinic = Clinic(
         name=name,
-        address=address,
-        phone=phone,
-        working_hours=working_hours,
-        vet_id=vet_id
+        vet_id=vet_id,
+        phone=data.get('phone'),
+        working_hours=data.get('working_hours'),
+        
+        # Sadece İl ve İlçe
+        city_id=data.get('city_id'),
+        district_id=data.get('district_id'),
+        
+        # Adres detayı
+        address_details=data.get('address_details') or data.get('address')
     )
-    db.session.add(clinic)
-    db.session.commit()
+    
+    try:
+        db.session.add(clinic)
+        db.session.commit()
+        return jsonify({"success": True, "clinic": clinic.to_dict()}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
 
-    return jsonify({"success": True, "clinic": clinic.to_dict()}), 201
-
-
-# Klinik güncelle
+# ---------------------------------------------------------
+# 5. KLİNİK GÜNCELLE (PUT)
+# ---------------------------------------------------------
 @clinic_bp.route('/clinics/<int:clinic_id>', methods=['PUT'])
 def update_clinic(clinic_id):
     clinic = Clinic.query.get(clinic_id)
@@ -68,22 +95,39 @@ def update_clinic(clinic_id):
         return jsonify({"success": False, "message": "Klinik bulunamadı"}), 404
 
     data = request.get_json()
+
     clinic.name = data.get('name', clinic.name)
-    clinic.address = data.get('address', clinic.address)
     clinic.phone = data.get('phone', clinic.phone)
     clinic.working_hours = data.get('working_hours', clinic.working_hours)
-    db.session.commit()
+    
+    # Konum güncelleme
+    clinic.city_id = data.get('city_id', clinic.city_id)
+    clinic.district_id = data.get('district_id', clinic.district_id)
+    
+    new_address = data.get('address_details') or data.get('address')
+    if new_address is not None:
+        clinic.address_details = new_address
 
-    return jsonify({"success": True, "clinic": clinic.to_dict()}), 200
+    try:
+        db.session.commit()
+        return jsonify({"success": True, "clinic": clinic.to_dict()}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
 
-
-# Klinik sil
+# ---------------------------------------------------------
+# 6. KLİNİK SİL (DELETE)
+# ---------------------------------------------------------
 @clinic_bp.route('/clinics/<int:clinic_id>', methods=['DELETE'])
 def delete_clinic(clinic_id):
     clinic = Clinic.query.get(clinic_id)
     if not clinic:
         return jsonify({"success": False, "message": "Klinik bulunamadı"}), 404
 
-    db.session.delete(clinic)
-    db.session.commit()
-    return jsonify({"success": True, "message": "Klinik silindi"}), 200
+    try:
+        db.session.delete(clinic)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Klinik silindi"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"success": False, "message": str(e)}), 500
