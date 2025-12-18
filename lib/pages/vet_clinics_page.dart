@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/clinic_service.dart';
-import '../services/location_service.dart';
+import '../../services/clinic_service.dart';
+import '../../services/location_service.dart';
 
 class VetClinicsPage extends StatefulWidget {
   final int vetId;
@@ -46,6 +46,10 @@ class _VetClinicsPageState extends State<VetClinicsPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF9F6EE),
+      appBar: AppBar(
+        title: const Text("Kliniklerim"),
+        backgroundColor: const Color(0xFF81C784),
+      ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF81C784),
         onPressed: () => _showClinicDialog(),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/vet_patients_service.dart';
+import '../../services/vet_patients_service.dart';
 
 
 class VetSearchPetsPage extends StatefulWidget {
@@ -13,8 +13,8 @@ class VetSearchPetsPage extends StatefulWidget {
 class _VetSearchPetsPageState extends State<VetSearchPetsPage> {
   final VetPatientsService _vetPatientsService = VetPatientsService();
 
-  List<dynamic> _allPets = [];      // API'den gelen ham liste
-  List<dynamic> _filteredPets = []; // Arama sonucu filtrelenmiş liste
+  List<dynamic> _allPets = [];
+  List<dynamic> _filteredPets = [];
   bool _isLoading = true;
 
   final TextEditingController _searchController = TextEditingController();
@@ -30,7 +30,7 @@ class _VetSearchPetsPageState extends State<VetSearchPetsPage> {
       final pets = await _vetPatientsService.getAllPets();
       setState(() {
         _allPets = pets;
-        _filteredPets = pets; // Başlangıçta hepsi görünsün
+        _filteredPets = pets;
         _isLoading = false;
       });
     } catch (e) {
@@ -39,7 +39,6 @@ class _VetSearchPetsPageState extends State<VetSearchPetsPage> {
     }
   }
 
-  // Arama Fonksiyonu
   void _runFilter(String keyword) {
     List<dynamic> results = [];
     if (keyword.isEmpty) {
@@ -54,15 +53,12 @@ class _VetSearchPetsPageState extends State<VetSearchPetsPage> {
     });
   }
 
-  // Listeye Ekleme İşlemi
   void _addPetToMyList(int petId, String petName) async {
-    // API isteği gönder
     final result = await _vetPatientsService.addPatient(widget.vetId, petId);
 
     if (!mounted) return;
 
     if (result.containsKey('message')) {
-      // Başarılı veya zaten ekli mesajı
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result['message']),
@@ -86,7 +82,6 @@ class _VetSearchPetsPageState extends State<VetSearchPetsPage> {
       ),
       body: Column(
         children: [
-          // ARAMA ÇUBUĞU
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: TextField(
@@ -117,11 +112,11 @@ class _VetSearchPetsPageState extends State<VetSearchPetsPage> {
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.orange.shade100,
-                      child: Text(pet['name'][0].toUpperCase(), // Baş harf
+                      child: Text(pet['name'][0].toUpperCase(),
                           style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
                     ),
                     title: Text(
-                      "${pet['name']} (ID: ${pet['id']})", // İsmin yanına ID ekledik
+                      "${pet['name']} (ID: ${pet['id']})",
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text("${pet['species']} (${pet['breed']})\nSahibi: ${pet['owner_name']}"),

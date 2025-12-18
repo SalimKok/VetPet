@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../services/appointment_service.dart';
-import '../services/vet_patients_service.dart';
+import '../../services/appointment_service.dart';
+import '../../services/vet_patients_service.dart';
 
 class VetAppointmentsPage extends StatefulWidget {
   final int vetId;
@@ -23,16 +23,14 @@ class _VetAppointmentsPageState extends State<VetAppointmentsPage> {
 
   void _loadAppointments() async {
     setState(() => isLoading = true);
-    // Backend'den listeyi çek
     appointments = await AppointmentService.getVetAppointments(widget.vetId);
     setState(() => isLoading = false);
   }
 
-  // --- YENİ EKLENEN FONKSİYON: Randevu Ekleme Penceresi ---
   void _showAddAppointmentSheet() {
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Klavye açılınca yukarı kayması için
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -40,8 +38,8 @@ class _VetAppointmentsPageState extends State<VetAppointmentsPage> {
         return _AddAppointmentForm(
           vetId: widget.vetId,
           onSuccess: () {
-            Navigator.pop(ctx); // Pencereyi kapat
-            _loadAppointments(); // Listeyi yenile
+            Navigator.pop(ctx);
+            _loadAppointments();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text("Randevu oluşturuldu!")),
             );
@@ -55,11 +53,14 @@ class _VetAppointmentsPageState extends State<VetAppointmentsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F6EE),
-      // --- YENİ: Ekleme Butonu ---
+      appBar: AppBar(
+        title: const Text("Randevularım"),
+        backgroundColor: const Color(0xFF81C784),
+      ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xFF81C784),
         child: const Icon(Icons.add),
-        onPressed: _showAddAppointmentSheet, // Pencereyi aç
+        onPressed: _showAddAppointmentSheet,
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -71,8 +72,6 @@ class _VetAppointmentsPageState extends State<VetAppointmentsPage> {
         itemBuilder: (context, index) {
           final a = appointments[index];
           final appointmentId = a['id'];
-          // Backend 'confirmed' dönebilir, UI 'approved' bekliyor olabilir.
-          // İkisini de kapsayalım.
           final status = a['status'] ?? 'pending';
 
           return Card(
@@ -129,7 +128,7 @@ class _VetAppointmentsPageState extends State<VetAppointmentsPage> {
                         TextButton(
                           onPressed: () async {
                             await AppointmentService.updateAppointmentStatus(
-                                appointmentId, 'cancelled');
+                                appointmentId, 'rejected');
                             _loadAppointments();
                           },
                           child: const Text("Reddet", style: TextStyle(color: Colors.red)),
@@ -146,7 +145,6 @@ class _VetAppointmentsPageState extends State<VetAppointmentsPage> {
                       ],
                     ),
 
-                  // Onaylı veya Confirmed ise Tamamla butonu çıkar
                   if (status == 'approved' || status == 'confirmed')
                     Align(
                       alignment: Alignment.centerRight,
@@ -174,9 +172,8 @@ class _VetAppointmentsPageState extends State<VetAppointmentsPage> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'approved':
-      case 'confirmed': // Backend vet oluşturunca confirmed dönüyor
+      case 'confirmed':
         return Colors.green;
-      case 'cancelled':
       case 'rejected':
         return Colors.red;
       case 'completed':
@@ -186,20 +183,18 @@ class _VetAppointmentsPageState extends State<VetAppointmentsPage> {
     }
   }
 
-  // Yardımcı metin fonksiyonu
   String _getStatusText(String status) {
     switch (status) {
       case 'pending': return "ONAY BEKLİYOR";
       case 'approved': return "ONAYLANDI";
-      case 'confirmed': return "PLANLANDI"; // Vet oluşturduysa
+      case 'confirmed': return "PLANLANDI";
       case 'completed': return "TAMAMLANDI";
-      case 'cancelled': return "İPTAL EDİLDİ";
+      case 'rejected': return "İPTAL EDİLDİ";
       default: return status.toUpperCase();
     }
   }
 }
 
-// --- ALT FORM WIDGETI (MODAL İÇİNDE ÇALIŞACAK) ---
 class _AddAppointmentForm extends StatefulWidget {
   final int vetId;
   final VoidCallback onSuccess;
@@ -214,9 +209,9 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _reasonController = TextEditingController();
 
-  List<dynamic> _myPatients = []; // Dropdown için hasta listesi
+  List<dynamic> _myPatients = [];
   int? _selectedPetId;
-  DateTime _selectedDate = DateTime.now().add(const Duration(days: 1)); // Yarın varsayılan
+  DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   TimeOfDay _selectedTime = const TimeOfDay(hour: 14, minute: 00);
   bool _isLoading = false;
   bool _isPatientsLoading = true;
@@ -227,7 +222,6 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
     _fetchPatients();
   }
 
-  // VetService kullanarak hastaları çekiyoruz
   void _fetchPatients() async {
     try {
       final patients = await VetPatientsService().getMyPatients(widget.vetId);
@@ -249,7 +243,6 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
 
     setState(() => _isLoading = true);
 
-    // Tarih ve Saati birleştir
     final DateTime finalDateTime = DateTime(
       _selectedDate.year,
       _selectedDate.month,
@@ -258,7 +251,6 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
       _selectedTime.minute,
     );
 
-    // Servisi çağır (Önceki adımda yazdığımız fonksiyon)
     final success = await AppointmentService().createAppointmentByVet(
       vetId: widget.vetId,
       petId: _selectedPetId!,
@@ -269,7 +261,7 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
     setState(() => _isLoading = false);
 
     if (success) {
-      widget.onSuccess(); // Başarılıysa sayfayı kapat ve yenile
+      widget.onSuccess();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Hata oluştu!")));
@@ -278,7 +270,7 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
 
   @override
   Widget build(BuildContext context) {
-    // Klavye açılınca padding ayarı
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -290,7 +282,7 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.min, // İçerik kadar yer kapla
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Text("Yeni Randevu / Aşı Oluştur",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -318,7 +310,6 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
 
               const SizedBox(height: 16),
 
-              // 2. SEBEP (AŞI ADI VS)
               TextFormField(
                 controller: _reasonController,
                 decoration: const InputDecoration(
@@ -330,8 +321,6 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
               ),
 
               const SizedBox(height: 16),
-
-              // 3. TARİH VE SAAT SEÇİCİ
               Row(
                 children: [
                   Expanded(

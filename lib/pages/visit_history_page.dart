@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/medical_visit.dart';
-import '../services/visits_service.dart';
+import '../../models/medical_visit.dart';
+import '../../services/visits_service.dart';
 import 'add_visit_page.dart';
 
 class VisitHistoryPage extends StatefulWidget {
@@ -99,7 +99,6 @@ class _VisitHistoryScreenState extends State<VisitHistoryPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("Tarih: $dateStr"),
-                      // Veteriner ismini yazdırıyoruz
                       Text(
                         "Vet: ${visit.vetName ?? 'Bilinmiyor'}",
                         style: TextStyle(

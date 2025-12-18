@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:petvet/pages/login_page.dart'; // Çıkış yapınca dönmek için
+import 'package:petvet/pages/admin/vet_approval_page.dart';
+import 'package:petvet/pages/login_page.dart';
+import 'package:petvet/pages/admin/user_management_page.dart';
+import 'package:petvet/services/admin_service.dart';
 
+import 'admin_appointment_management_page.dart';
 class AdminPage extends StatefulWidget {
   const AdminPage({Key? key}) : super(key: key);
 
@@ -11,7 +13,8 @@ class AdminPage extends StatefulWidget {
 }
 
 class _AdminDashboardState extends State<AdminPage> {
-  // Başlangıç verileri (0 olarak başlatıyoruz)
+  final AdminService _adminService = AdminService();
+
   Map<String, dynamic> stats = {
     "total_users": 0,
     "total_vets": 0,
@@ -23,49 +26,32 @@ class _AdminDashboardState extends State<AdminPage> {
   @override
   void initState() {
     super.initState();
-    fetchStats();
+    _loadStats();
   }
 
-  // Backend'den istatistikleri çeken fonksiyon
-  Future<void> fetchStats() async {
-    // DİKKAT: URL'in sonu /api/admin/stats olmalı
-    final url = Uri.parse("http://10.0.2.2:5000/api/admin/stats");
-
+  Future<void> _loadStats() async {
     try {
-      print("İstek gönderiliyor: $url"); // Terminale bilgi basar
-      final response = await http.get(url);
+      final data = await _adminService.fetchStats();
 
-      print("Sunucu Cevabı: ${response.statusCode}"); // Kodu görürüz (200, 404, 500?)
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          stats = {
-            "total_users": data['total_users'],
-            "total_vets": data['total_vets'],
-            "total_owners": data['total_owners'],
-            "total_appointments": data['total_appointments']
-          };
-          isLoading = false; // Yükleme bitti
-        });
-      } else {
-        // Hata olsa bile loading'i kapat ki ekranı görelim
-        print("Sunucu hatası: ${response.body}");
-        setState(() => isLoading = false);
-      }
+      setState(() {
+        stats = {
+          "total_users": data['total_users'],
+          "total_vets": data['total_vets'],
+          "total_owners": data['total_owners'],
+          "total_appointments": data['total_appointments']
+        };
+        isLoading = false;
+      });
     } catch (e) {
-      // Bağlantı koparsa buraya düşer
-      print("BAĞLANTI HATASI: $e");
-      setState(() => isLoading = false); // Yüklemeyi kapat
+      print("İstatistik Hatası: $e");
+      setState(() => isLoading = false);
 
-      // Ekrana hata mesajı fırlat
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Bağlantı Hatası: $e"), backgroundColor: Colors.red),
+        SnackBar(content: Text("Veriler alınamadı: $e"), backgroundColor: Colors.red),
       );
     }
   }
 
-  // Çıkış Yapma Fonksiyonu
   void _logout() {
     Navigator.pushReplacement(
       context,
@@ -76,7 +62,7 @@ class _AdminDashboardState extends State<AdminPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE), // Uygulama genel rengin
+      backgroundColor: const Color(0xFFF9F6EE),
       appBar: AppBar(
         title: const Text("Yönetim Paneli"),
         backgroundColor: const Color(0xFF4E342E),
@@ -95,19 +81,10 @@ class _AdminDashboardState extends State<AdminPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "Genel Bakış",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF4E342E),
-              ),
-            ),
             const SizedBox(height: 16),
-
-            // --- İSTATİSTİK KARTLARI (GRID) ---
+            // --- İSTATİSTİK KARTLARI ---
             GridView.count(
-              crossAxisCount: 2, // Yan yana 2 kutu
+              crossAxisCount: 2,
               shrinkWrap: true,
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
@@ -137,24 +114,37 @@ class _AdminDashboardState extends State<AdminPage> {
               subtitle: "Tüm kayıtlı kullanıcıları listele ve düzenle",
               icon: Icons.manage_accounts,
               onTap: () {
-                // Buraya Kullanıcı Listesi sayfasına yönlendirme gelecek
-                // Navigator.push(...)
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const UserManagementPage()),
+                );
               },
             ),
             _buildActionTile(
               title: "Veteriner Onayları",
               subtitle: "Bekleyen veteriner başvurularını incele",
               icon: Icons.verified_user,
-              color: const Color(0xFFD32F2F), // Dikkat çeksin diye kırmızımsı
+              color: const Color(0xFFD32F2F),
               onTap: () {
-                // Onay sayfasına git
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const VetApprovalPage()),
+                ).then((_) {
+                  _loadStats();
+                });
               },
             ),
             _buildActionTile(
-              title: "Sistem Ayarları",
-              subtitle: "Uygulama genel ayarları",
-              icon: Icons.settings,
-              onTap: () {},
+              title: "Tüm Randevuları Yönet",
+              subtitle: "Sistemdeki aktif ve geçmiş tüm randevuları gör",
+              icon: Icons.event_note,
+              color: Colors.indigo,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminAppointmentManagementPage()),
+                );
+              },
             ),
           ],
         ),
@@ -162,7 +152,6 @@ class _AdminDashboardState extends State<AdminPage> {
     );
   }
 
-  // İstatistik Kartı Tasarımı (Widget)
   Widget _buildStatCard(String title, String count, IconData icon, Color color) {
     return Card(
       elevation: 4,
@@ -185,7 +174,6 @@ class _AdminDashboardState extends State<AdminPage> {
     );
   }
 
-  // Aksiyon Butonu Tasarımı (ListTile)
   Widget _buildActionTile({
     required String title,
     required String subtitle,

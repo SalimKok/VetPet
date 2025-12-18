@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/medical_procedure.dart';
-import '../models/medical_visit.dart';
-import '../services/visits_service.dart';
+import '../../models/medical_procedure.dart';
+import '../../models/medical_visit.dart';
+import '../../services/visits_service.dart';
 
 
 class AddVisitPage extends StatefulWidget {
@@ -17,14 +17,11 @@ class _AddVisitScreenState extends State<AddVisitPage> {
   final _formKey = GlobalKey<FormState>();
   final VisitService _api = VisitService();
 
-  // Ana form kontrolleri
   final TextEditingController _diagnosisController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
-  // Dinamik olarak eklenecek işlemler listesi
   List<MedicalProcedure> _tempProcedures = [];
 
-  // İşlem ekleme formu için geçici kontrolcüler
   final TextEditingController _procTitleController = TextEditingController();
   final TextEditingController _procCategoryController = TextEditingController();
   final TextEditingController _procDetailsController = TextEditingController();
@@ -36,7 +33,6 @@ class _AddVisitScreenState extends State<AddVisitPage> {
 
     setState(() => _isLoading = true);
 
-    // Backend'e gidecek nesneyi oluştur
     MedicalVisit newVisit = MedicalVisit(
       petId: widget.petId,
       vetId: widget.vetId,
@@ -50,7 +46,7 @@ class _AddVisitScreenState extends State<AddVisitPage> {
     setState(() => _isLoading = false);
 
     if (success && mounted) {
-      Navigator.pop(context, true); // Başarılı ise önceki sayfaya 'true' dön
+      Navigator.pop(context, true);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Kaydetme sırasında bir hata oluştu.")),
@@ -58,7 +54,6 @@ class _AddVisitScreenState extends State<AddVisitPage> {
     }
   }
 
-  // Listeye geçici işlem ekleyen küçük pencere
   void _showAddProcedureDialog() {
     _procTitleController.clear();
     _procCategoryController.clear();
@@ -85,7 +80,6 @@ class _AddVisitScreenState extends State<AddVisitPage> {
                   _tempProcedures.add(MedicalProcedure(
                     category: _procCategoryController.text,
                     title: _procTitleController.text,
-                    // Detayları basit bir map olarak atıyoruz
                     details: {'info': _procDetailsController.text},
                   ));
                 });
@@ -110,7 +104,6 @@ class _AddVisitScreenState extends State<AddVisitPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // --- 1. Ana Muayene Bilgileri ---
               TextFormField(
                 controller: _diagnosisController,
                 decoration: const InputDecoration(
@@ -134,7 +127,6 @@ class _AddVisitScreenState extends State<AddVisitPage> {
               const SizedBox(height: 24),
               const Divider(thickness: 2),
 
-              // --- 2. Yapılan İşlemler (Dinamik Liste) ---
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -154,7 +146,7 @@ class _AddVisitScreenState extends State<AddVisitPage> {
                 )
               else
                 ListView.builder(
-                  shrinkWrap: true, // ScrollView içinde ListView kullanımı için şart
+                  shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _tempProcedures.length,
                   itemBuilder: (ctx, index) {

@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../services/api_service.dart';
-import '../services/user_service.dart';
-import 'login_page.dart';
+import '../../services/api_service.dart';
+import '../../services/user_service.dart';
+import '../login_page.dart';
+import '../settings_page.dart';
 
 class VetProfilePage extends StatefulWidget {
   final int vetId;
@@ -125,7 +126,6 @@ class _VetProfilePageState extends State<VetProfilePage> {
                           };
                           final success = await UserService.updateUserProfile(widget.vetId, updatedData);
                           if (success) {
-                            // Güncelleme sonrası backend’den güncel veriyi al
                             final updatedProfile = await UserService.getUserProfile(widget.vetId);
                             if (updatedProfile != null) {
                               setState(() => profileData = updatedProfile);
@@ -185,6 +185,23 @@ class _VetProfilePageState extends State<VetProfilePage> {
     final profile = profileData!;
     return Scaffold(
       backgroundColor: const Color(0xFFF9F6EE),
+      appBar: AppBar(
+        title: const Text("Profilim"),
+        backgroundColor: const Color(0xFF81C784),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            tooltip: "Ayarlar",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage(userRole: "vet")),
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(

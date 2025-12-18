@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:petvet/pages/vet_my_patients_page.dart';
+import 'package:petvet/pages/vet/vet_my_patients_page.dart';
 import 'vet_clinics_page.dart';
 import 'vet_appointments_page.dart';
 import 'vet_profile_page.dart';
-import 'vet_settings_page.dart';
 
 class VetHomePage extends StatefulWidget {
   final int vetId;
@@ -26,7 +25,6 @@ class _VetHomePageState extends State<VetHomePage> {
       VetMyPatientsPage(vetId: widget.vetId),
       VetAppointmentsPage(vetId: widget.vetId),
       VetProfilePage(vetId:widget.vetId),
-      VetSettingsPage(),
     ];
   }
 
@@ -34,12 +32,8 @@ class _VetHomePageState extends State<VetHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F6EE),
-      appBar: AppBar(
-        title: Text(_getAppBarTitle()),
-        backgroundColor: const Color(0xFF81C784),
-        elevation: 0,
-      ),
-      body: _pages[_currentIndex],
+
+      body: _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         selectedItemColor: const Color(0xFF81C784),
@@ -64,29 +58,23 @@ class _VetHomePageState extends State<VetHomePage> {
             icon: Icon(Icons.person),
             label: 'Profil',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Ayarlar',
-          ),
         ],
       ),
     );
   }
 
-  String _getAppBarTitle() {
+  Widget _buildBody() {
     switch (_currentIndex) {
       case 0:
-        return "Kliniklerim";
+        return VetClinicsPage(vetId: widget.vetId);
       case 1:
-        return "Hastalarım";
+        return VetMyPatientsPage(vetId: widget.vetId);
       case 2:
-        return "Randevularım";
+        return VetAppointmentsPage(vetId: widget.vetId);
       case 3:
-        return "Profil";
-      case 4:
-        return "Ayarlar";
+        return VetProfilePage(vetId: widget.vetId);
       default:
-        return "";
+        return const SizedBox();
     }
   }
 }
