@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../services/user_service.dart';
-import '../services/api_service.dart';
-import 'login_page.dart';
+import 'package:petvet/pages/settings_page.dart';
+import '../../services/user_service.dart';
+import '../../services/api_service.dart';
+import '../login_page.dart';
 
 class OwnerProfilePage extends StatefulWidget {
   final int ownerId;
@@ -65,6 +66,7 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
     final ImagePicker picker = ImagePicker();
 
     showModalBottomSheet(
+      backgroundColor: const Color(0xFFECE8D9),
       context: context,
       isScrollControlled: true,
       builder: (context) => Padding(
@@ -82,7 +84,7 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        backgroundColor: const Color(0xFF81C784).withOpacity(0.4),
+                        backgroundColor: const Color(0xFF22577A).withOpacity(0.4),
                         backgroundImage: selectedImage != null
                             ? FileImage(selectedImage!)
                             : (profileData!["photo_url"] != null
@@ -102,7 +104,7 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
                           },
                           child: CircleAvatar(
                             radius: 18,
-                            backgroundColor: Colors.green,
+                            backgroundColor: const Color(0xFF22577A),
                             child: const Icon(Icons.edit, size: 18, color: Colors.white),
                           ),
                         ),
@@ -145,14 +147,14 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
                             );
                           }
                         },
-                        icon: const Icon(Icons.save),
-                        label: const Text("Kaydet"),
+                        icon: const Icon(Icons.save,color: const Color(0xFFFFFFFF),),
+                        label: const Text("Kaydet",style: TextStyle(color:  const Color(0xFFFFFFFF))),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                       ),
                       ElevatedButton.icon(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close),
-                        label: const Text("İptal"),
+                        icon: const Icon(Icons.close,color: const Color(0xFFFFFFFF),),
+                        label: const Text("İptal",style: TextStyle(color:  const Color(0xFFFFFFFF))),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                       ),
                     ],
@@ -189,7 +191,24 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
 
     final profile = profileData!;
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE),
+      backgroundColor: const Color(0xFFECE8D9),
+      appBar: AppBar(
+        title: const Text("Profilim",style: TextStyle(color:  const Color(0xFFFFFFFF))),
+        backgroundColor: const Color(0xFF22577A),
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            tooltip: "Ayarlar",
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage(userRole: "owner")),
+              );
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -198,7 +217,7 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
             Center(
               child: CircleAvatar(
                 radius: 60,
-                backgroundColor: const Color(0xFF81C784).withOpacity(0.4),
+                backgroundColor: const Color(0xFF22577A).withOpacity(0.4),
                 backgroundImage: _getProfileImage(),
                 child: (_getProfileImage() is AssetImage) ? const Icon(Icons.person, size: 60, color: Colors.white) : null,
               ),
@@ -226,9 +245,9 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
             ElevatedButton.icon(
               onPressed: _openEditModal,
               icon: const Icon(Icons.edit, color: Colors.white),
-              label: const Text("Profili Düzenle", style: TextStyle(color: Colors.white)),
+              label: const Text("Profili Düzenle",style: TextStyle(color:  const Color(0xFFFFFFFF))),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF81C784),
+                  backgroundColor: const Color(0xFF22577A),
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
             ),
@@ -247,7 +266,7 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, color: const Color(0xFF81C784)),
+        Icon(icon, color: const Color(0xFF22577A)),
         const SizedBox(width: 12),
         Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown))),
         Text(value, style: const TextStyle(color: Colors.black87)),

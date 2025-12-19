@@ -1,12 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import '../services/api_service.dart';
-import '../services/pet_service.dart';
+import '../../services/api_service.dart';
+import '../../services/pet_service.dart';
 
 class PetFormPage extends StatefulWidget {
   final int ownerId;
-  final Map<String, dynamic>? pet; // null ise yeni ekleme
+  final Map<String, dynamic>? pet;
 
   const PetFormPage({required this.ownerId, this.pet, Key? key}) : super(key: key);
 
@@ -62,7 +62,7 @@ class _PetFormPageState extends State<PetFormPage> {
       "breed": breedController.text.trim(),
       "notes": notesController.text.trim(),
       "birth_date": birthday?.toIso8601String(),
-      "photo_file": photoFile, // Multipart gönderilecek
+      "photo_file": photoFile,
     };
 
     bool success;
@@ -87,7 +87,7 @@ class _PetFormPageState extends State<PetFormPage> {
     } else if (widget.pet != null && widget.pet!['photo_url'] != null) {
       String url = widget.pet!['photo_url'];
       if (!url.startsWith("http")) {
-        url = "${ApiService.baseUrl}$url"; // relative path’i mutlak yap
+        url = "${ApiService.baseUrl}$url";
       }
       return NetworkImage(url);
     }

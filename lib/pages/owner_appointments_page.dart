@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../services/appointment_service.dart';
-import '../services/pet_service.dart';
-import '../services/vet_service.dart';
+import '../../services/appointment_service.dart';
+import '../../services/pet_service.dart';
+import '../../services/vet_service.dart';
 
 class AppointmentPage extends StatefulWidget {
   final int ownerId;
@@ -36,13 +36,44 @@ class _AppointmentPageState extends State<AppointmentPage> {
     setState(() => isLoading = false);
   }
 
+  String _getStatusTR(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return '⏳ Onay Bekliyor';
+      case 'approved':
+        return '👍 Onaylandı';
+      case 'rejected':
+        return '❌ Reddedildi';
+      case 'completed':
+        return '✔️ Tamamlandı';
+      case 'cancelled':
+        return '🚫 İptal Edildi';
+      default:
+        return status;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange.shade800;
+      case 'approved':
+        return Colors.green.shade700;
+      case 'rejected':
+      case 'cancelled':
+        return Colors.red.shade700;
+      case 'completed':
+        return Colors.blue.shade700;
+      default:
+        return Colors.black87;
+    }
+  }
+
   Future<void> _showAddOrEditAppointmentDialog({Map<String, dynamic>? appointment}) async {
     int? selectedPetId = appointment?['pet_id'];
     int? selectedVetId = appointment?['vet_id'];
     DateTime? selectedDate = appointment != null ? DateTime.parse(appointment['date']) : null;
     String reason = appointment?['reason'] ?? '';
-
-    final vets = await VetService.getVets();
 
     await showDialog(
       context: context,
@@ -142,6 +173,7 @@ class _AppointmentPageState extends State<AppointmentPage> {
                     petId: selectedPetId!,
                     ownerId: widget.ownerId,
                     vetId: selectedVetId!,
+                    clinicId: null,
                     date: selectedDate!,
                     reason: reason,
                   );
@@ -176,51 +208,87 @@ class _AppointmentPageState extends State<AppointmentPage> {
   @override
   Widget build(BuildContext context) {
     if (isLoading) return const Center(child: CircularProgressIndicator());
+    return Scaffold(
+      backgroundColor:const Color(0xFFECE8D9),
+      appBar: AppBar(
+        title: const Text("Randevularım",style: TextStyle(color:  const Color(0xFFFFFFFF)),),
+        backgroundColor: const Color(0xFF22577A),
+        automaticallyImplyLeading: false,
+      ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
+        children: [
+          Expanded(
+            child: appointments.isEmpty
+                ? const Center(child: Text("Henüz randevu yok!"))
+                : ListView.builder(
+              itemCount: appointments.length,
+              itemBuilder: (context, index) {
+                final a = appointments[index];
+                final petName = petNames[a['pet_id']] ?? 'Bilinmiyor';
+                final rawStatus = a['status'] ?? 'pending';
 
-    return Column(
-      children: [
-        Expanded(
-          child: appointments.isEmpty
-              ? const Center(child: Text("Henüz randevu yok!"))
-              : ListView.builder(
-            itemCount: appointments.length,
-            itemBuilder: (context, index) {
-              final a = appointments[index];
-              final petName = petNames[a['pet_id']] ?? 'Bilinmiyor';
-              final status = a['status'] ?? 'pending';
-              // Sadece 'pending' ise düzenlenebilir
-              final bool isEditable = status == 'pending';
-              return Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  title: Text("Evcil Hayvan: $petName"),
-                  subtitle: Text(
-                    "Veteriner: ${vetNames[a['vet_id']] ?? 'Bilinmiyor'}\n"
-                        "Tarih: ${DateFormat('yyyy-MM-dd – kk:mm').format(DateTime.parse(a['date']))}\n"
-                        "Sebep: ${a['reason'] ?? ''}\n"
-                        "Durum: ${a['status']}",
+                final statusTR = _getStatusTR(rawStatus);
+                final statusColor = _getStatusColor(rawStatus);
+                final bool isEditable = rawStatus == 'pending';
+
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ListTile(
+                    title: Text(
+                      "Evcil Hayvan: $petName",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 5),
+                        Text("Veteriner: ${vetNames[a['vet_id']] ?? 'Bilinmiyor'}"),
+                        Text("Tarih: ${DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.parse(a['date']))}"),
+                        if (a['reason'] != null && a['reason'].toString().isNotEmpty)
+                          Text("Sebep: ${a['reason']}"),
+                        const SizedBox(height: 5),
+                        Row(
+                          children: [
+                            const Text("Durum: "),
+                            Text(
+                              statusTR,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: statusColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    trailing: isEditable
+                        ? IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      tooltip: "Düzenle / İptal Et",
+                      onPressed: () => _showAddOrEditAppointmentDialog(appointment: a),
+                    )
+                        : null,
                   ),
-                  trailing: isEditable
-                      ? IconButton(
-                    icon: const Icon(Icons.edit, color: Colors.blue),
-                    tooltip: "Düzenle / İptal Et",
-                    onPressed: () => _showAddOrEditAppointmentDialog(appointment: a),
-                  )
-                      :null
-                ),
-              );
-            },
+                );
+              },
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            onPressed: () => _showAddOrEditAppointmentDialog(),
-            child: const Text("Yeni Randevu Oluştur"),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF22577A),
+                foregroundColor: const Color(0xFFFFFFFF),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              ),
+              onPressed: () => _showAddOrEditAppointmentDialog(),
+              child: const Text("Yeni Randevu Oluştur"),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
-

@@ -1,9 +1,9 @@
-// owner_pet_list_page.dart
+
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
-import '../services/pet_service.dart';
-import 'visit_history_page.dart';
+import '../../services/api_service.dart';
+import '../../services/pet_service.dart';
+import '../vet/visit_history_page.dart';
 import 'owner_pet_form_page.dart';
 
 class PetListPage extends StatefulWidget {
@@ -32,20 +32,32 @@ class _PetListPageState extends State<PetListPage> {
 
   void _refresh() => _loadPets();
 
-  ImageProvider? _getPetImage(Map<String, dynamic> pet, File? photoFile) {
-    if (photoFile != null) return FileImage(photoFile);
-    if (pet['photo_url'] != null && pet['photo_url'].toString().isNotEmpty) {
-      final url = pet['photo_url'].toString().startsWith('http')
-          ? pet['photo_url']
-          : "${ApiService.baseUrl}${pet['photo_url']}";
-      return NetworkImage(url);
+  String? _constructImageUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.isEmpty) return null;
+
+    String finalUrl = rawUrl;
+
+    if (!rawUrl.startsWith('http')) {
+      if (rawUrl.startsWith('/')) {
+        finalUrl = "${ApiService.baseUrl}$rawUrl";
+      } else {
+        finalUrl = "${ApiService.baseUrl}/$rawUrl";
+      }
     }
-    return null;
+
+    print("Resim URL: $finalUrl");
+    return finalUrl;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFECE8D9),
+      appBar: AppBar(
+        title: const Text("Evcil Dostlarım",style: TextStyle(color: const Color(0xFFFFFFFF)),),
+        backgroundColor: const Color(0xFF22577A),
+        automaticallyImplyLeading: false,
+      ),
       body: SafeArea(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -56,34 +68,47 @@ class _PetListPageState extends State<PetListPage> {
           itemCount: pets.length,
           itemBuilder: (context, index) {
             final pet = pets[index];
+            final imageUrl = _constructImageUrl(pet['photo_url']);
+
             return Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               margin: const EdgeInsets.only(bottom: 16),
               elevation: 4,
               child: ListTile(
                 contentPadding: const EdgeInsets.all(16),
                 leading: CircleAvatar(
                   radius: 30,
-                  backgroundColor:
-                  const Color(0xFF81C784).withOpacity(0.3),
-                  backgroundImage: _getPetImage(pet, null),
-                  child: _getPetImage(pet, null) == null
-                      ? const Icon(Icons.pets,
-                      color: Colors.brown, size: 30)
-                      : null,
+                  backgroundColor: const Color(0xFF22577A).withOpacity(0.3),
+                  child: ClipOval(
+                    child: SizedBox(
+                      width: 60,
+                      height: 60,
+                      child: imageUrl != null
+                          ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) {
+                          print("Resim Yükleme Hatası: $error");
+                          return const Icon(Icons.pets, color: Colors.brown, size: 30);
+                        },
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                        },
+                      )
+                          : const Icon(Icons.pets, color: Colors.brown, size: 30),
+                    ),
+                  ),
                 ),
+                // -------------------------------------
                 title: Text(
-                  "${pet['name'] ?? ''} (${pet['id'] ?? ''})",
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.brown),
+                  "${pet['name'] ?? ''}",
+                  style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown),
                 ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                        "${pet['species'] ?? ''} - ${pet['breed'] ?? ''}",
+                    Text("${pet['species'] ?? ''} - ${pet['breed'] ?? ''}",
                         style: const TextStyle(color: Colors.black54)),
                     Text("${pet['birth_date'] ?? ''}",
                         style: const TextStyle(color: Colors.black54)),
@@ -93,20 +118,19 @@ class _PetListPageState extends State<PetListPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.brown),
+                      icon: const Icon(Icons.edit, color: const Color(0xFF22577A),),
                       onPressed: () async {
                         final updated = await Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => PetFormPage(
-                                ownerId: widget.ownerId, pet: pet),
+                            builder: (_) => PetFormPage(ownerId: widget.ownerId, pet: pet),
                           ),
                         );
                         if (updated == true) _refresh();
                       },
                     ),
                     IconButton(
-                      icon: const Icon(Icons.healing, color: Colors.brown),
+                      icon: const Icon(Icons.healing, color: const Color(0xFF22577A),),
                       onPressed: () async {
                         final updated = await Navigator.push(
                           context,
@@ -115,7 +139,7 @@ class _PetListPageState extends State<PetListPage> {
                               petId: pet['id'],
                               petName: pet['name'] ?? 'Pet',
                               isVet: false,
-                          ),
+                            ),
                           ),
                         );
                         if (updated == true) _refresh();
@@ -129,7 +153,7 @@ class _PetListPageState extends State<PetListPage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF81C784),
+        backgroundColor: const Color(0xFF22577A),
         onPressed: () async {
           final added = await Navigator.push(
             context,
@@ -139,7 +163,7 @@ class _PetListPageState extends State<PetListPage> {
           );
           if (added == true) _refresh();
         },
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add,color: const Color(0xFFFFFFFF),),
       ),
     );
   }
