@@ -61,12 +61,12 @@ class _LoginPageState extends State<LoginPage> {
       controller: controller,
       obscureText: isPassword && !isPasswordVisible,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.brown),
+        prefixIcon: Icon(icon, color:const Color(0xFF22577A),),
         suffixIcon: isPassword
             ? IconButton(
           icon: Icon(
             isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-            color: Colors.brown,
+            color: const Color(0xFF22577A),
           ),
           onPressed: () =>
               setState(() => isPasswordVisible = !isPasswordVisible),
@@ -99,7 +99,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE),
+      backgroundColor: const Color(0xFFECE8D9),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 60),
         child: Column(
@@ -124,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 8),
             const Text(
               "Evcil dostlarınız için en iyi veteriner deneyimi",
-              style: TextStyle(fontSize: 14, color: Colors.brown),
+              style: TextStyle(fontSize: 14, color: Colors.brown, fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 40),
@@ -155,7 +155,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const Text(
                   "Beni Hatırla",
-                  style: TextStyle(color: Colors.brown),
+                  style: TextStyle(color: Colors.brown, fontSize: 16),
                 ),
               ],
             ),
@@ -166,7 +166,7 @@ class _LoginPageState extends State<LoginPage> {
               child: ElevatedButton(
                 onPressed: isLoading ? null : _handleLogin,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF81C784),
+                  backgroundColor: const Color(0xFF22577A),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(

@@ -20,20 +20,39 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE),
-      appBar: AppBar(title: const Text("Kayıt Ol")),
+      backgroundColor: const Color(0xFFECE8D9),
+      appBar: AppBar(
+        title: const Text(
+          "Kayıt Ol",
+          style: TextStyle(color: const Color(0xFFFFFFFF)),
+        ),
+        backgroundColor: const Color(0xFF22577A),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            _buildTextField(controller: nameController, label: 'Ad Soyad', icon: Icons.person),
+            _buildTextField(
+              controller: nameController,
+              label: 'Ad Soyad',
+              icon: Icons.person,
+            ),
             const SizedBox(height: 16),
-            _buildTextField(controller: emailController, label: 'Email', icon: Icons.email_rounded),
+            _buildTextField(
+              controller: emailController,
+              label: 'Email',
+              icon: Icons.email_rounded,
+            ),
             const SizedBox(height: 16),
-            _buildTextField(controller: passwordController, label: 'Şifre', icon: Icons.lock_rounded, isPassword: true),
+            _buildTextField(
+              controller: passwordController,
+              label: 'Şifre',
+              icon: Icons.lock_rounded,
+              isPassword: true,
+            ),
             const SizedBox(height: 20),
 
-            // 🔹 Role seçimi
+            //  Role seçimi
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -53,32 +72,39 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
             const SizedBox(height: 30),
 
-            // 🔹 Kayıt butonu
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: isLoading
                     ? null
                     : () async {
-                  setState(() => isLoading = true);
-                  await RegisterService.register(
-                    context: context,
-                    name: nameController.text.trim(),
-                    email: emailController.text.trim(),
-                    password: passwordController.text.trim(),
-                    role: selectedRole,
-                  );
-                  setState(() => isLoading = false);
-                },
+                        setState(() => isLoading = true);
+                        await RegisterService.register(
+                          context: context,
+                          name: nameController.text.trim(),
+                          email: emailController.text.trim(),
+                          password: passwordController.text.trim(),
+                          role: selectedRole,
+                        );
+                        setState(() => isLoading = false);
+                      },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF81C784),
+                  backgroundColor: const Color(0xFF22577A),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
                 child: isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Kayıt Ol', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    : const Text(
+                        'Kayıt Ol',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -97,11 +123,14 @@ class _RegisterPageState extends State<RegisterPage> {
       controller: controller,
       obscureText: isPassword,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.brown),
+        prefixIcon: Icon(icon, color: const Color(0xFF22577A)),
         labelText: label,
         filled: true,
         fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }
