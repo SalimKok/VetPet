@@ -52,14 +52,14 @@ class _VetAppointmentsPageState extends State<VetAppointmentsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE),
+      backgroundColor: const Color(0xFFECE8D9),
       appBar: AppBar(
-        title: const Text("Randevularım"),
-        backgroundColor: const Color(0xFF81C784),
+        title: const Text("Randevularım",style: TextStyle(color: const Color(0xFFFFFFFF))),
+        backgroundColor: const Color(0xFF22577A),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF81C784),
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFF22577A),
+        child: const Icon(Icons.add,color: const Color(0xFFFFFFFF)),
         onPressed: _showAddAppointmentSheet,
       ),
       body: isLoading
@@ -155,7 +155,7 @@ class _VetAppointmentsPageState extends State<VetAppointmentsPage> {
                           _loadAppointments();
                         },
                         icon: const Icon(Icons.done_all, size: 18),
-                        label: const Text("Tamamlandı"),
+                        label: const Text("Tamamla"),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                       ),
                     ),
@@ -285,7 +285,7 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text("Yeni Randevu / Aşı Oluştur",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold,color: Colors.brown)),
               const SizedBox(height: 20),
 
               // 1. HASTA SEÇİMİ (DROPDOWN)
@@ -363,7 +363,7 @@ class _AddAppointmentFormState extends State<_AddAppointmentForm> {
                 height: 50,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF81C784),
+                    backgroundColor: const Color(0xFF22577A),
                   ),
                   onPressed: _isLoading ? null : _submit,
                   child: _isLoading

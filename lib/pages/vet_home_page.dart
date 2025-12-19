@@ -36,7 +36,7 @@ class _VetHomePageState extends State<VetHomePage> {
       body: _buildBody(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        selectedItemColor: const Color(0xFF81C784),
+        selectedItemColor: const Color(0xFF22577A),
         unselectedItemColor: Colors.brown,
         backgroundColor: Colors.white,
         type: BottomNavigationBarType.fixed,

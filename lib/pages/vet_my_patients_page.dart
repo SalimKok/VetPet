@@ -39,15 +39,15 @@ class _VetMyPatientsPageState extends State<VetMyPatientsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE),
+      backgroundColor: const Color(0xFFECE8D9),
       appBar: AppBar(
-        title: const Text("Hastalarım"),
-        backgroundColor: const Color(0xFF81C784),
+        title: const Text("Hastalarım",style: TextStyle(color: const Color(0xFFFFFFFF))),
+        backgroundColor: const Color(0xFF22577A),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: Colors.blueAccent,
-        icon: const Icon(Icons.search),
-        label: const Text("Hasta Bul / Ekle"),
+        backgroundColor: const Color(0xFF22577A),
+        icon: const Icon(Icons.search,color: const Color(0xFFFFFFFF),),
+        label: const Text("Hasta Bul / Ekle",style: TextStyle(color: const Color(0xFFFFFFFF))),
         onPressed: () async {
           await Navigator.push(
             context,
@@ -82,10 +82,10 @@ class _VetMyPatientsPageState extends State<VetMyPatientsPage> {
               leading: CircleAvatar(
                 radius: 28,
                 backgroundColor: Colors.blue.shade100,
-                child: const Icon(Icons.pets, color: Colors.blue, size: 30),
+                child: const Icon(Icons.pets, color: const Color(0xFF22577A), size: 30),
               ),
               title: Text("${pet['name'] ?? 'İsimsiz'} (id:${pet['id']})",
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18,color: Colors.brown),
               ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +97,7 @@ class _VetMyPatientsPageState extends State<VetMyPatientsPage> {
                   ),
                 ],
               ),
-              trailing: const Icon(Icons.receipt_long, size: 24, color: Colors.grey),
+              trailing: const Icon(Icons.receipt_long, size: 24, color: const Color(0xFF22577A)),
               onTap: () {
                 Navigator.push(
                   context,

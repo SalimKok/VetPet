@@ -45,15 +45,15 @@ class _VetClinicsPageState extends State<VetClinicsPage> {
     if (isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE),
+      backgroundColor: const Color(0xFFECE8D9),
       appBar: AppBar(
-        title: const Text("Kliniklerim"),
-        backgroundColor: const Color(0xFF81C784),
+        title: const Text("Kliniklerim",style: TextStyle(color: const Color(0xFFFFFFFF)),),
+        backgroundColor: const Color(0xFF22577A),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF81C784),
+        backgroundColor: const Color(0xFF22577A),
         onPressed: () => _showClinicDialog(),
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add,color: const Color(0xFFFFFFFF)),
       ),
       body: clinics.isEmpty
           ? const Center(child: Text("Henüz klinik eklenmedi!"))
@@ -88,7 +88,7 @@ class _VetClinicsPageState extends State<VetClinicsPage> {
                 ),
               ),
               trailing: IconButton(
-                icon: const Icon(Icons.edit, color: Colors.brown),
+                icon: const Icon(Icons.edit, color: const Color(0xFF22577A)),
                 onPressed: () => _showClinicDialog(clinic: c),
               ),
             ),
@@ -382,8 +382,8 @@ class _ClinicFormDialogState extends State<_ClinicFormDialog> {
             }
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF81C784),
-            foregroundColor: Colors.white,
+            backgroundColor: const Color(0xFF22577A),
+            foregroundColor: const Color(0xFFFFFFFF),
           ),
           child: Text(widget.existingClinic == null ? "Kaydet" : "Güncelle"),
         ),

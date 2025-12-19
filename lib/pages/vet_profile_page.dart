@@ -66,6 +66,7 @@ class _VetProfilePageState extends State<VetProfilePage> {
     final ImagePicker picker = ImagePicker();
 
     showModalBottomSheet(
+      backgroundColor: const Color(0xFFECE8D9),
       context: context,
       isScrollControlled: true,
       builder: (context) => Padding(
@@ -83,7 +84,7 @@ class _VetProfilePageState extends State<VetProfilePage> {
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        backgroundColor: const Color(0xFF81C784).withOpacity(0.4),
+                        backgroundColor:const Color(0xFF22577A).withOpacity(0.4),
                         backgroundImage: selectedImage != null
                             ? FileImage(selectedImage!)
                             : (_getProfileImage() as ImageProvider),
@@ -101,7 +102,7 @@ class _VetProfilePageState extends State<VetProfilePage> {
                           },
                           child: CircleAvatar(
                             radius: 18,
-                            backgroundColor: Colors.green,
+                            backgroundColor: const Color(0xFF22577A),
                             child: const Icon(Icons.edit, size: 18, color: Colors.white),
                           ),
                         ),
@@ -140,14 +141,14 @@ class _VetProfilePageState extends State<VetProfilePage> {
                             );
                           }
                         },
-                        icon: const Icon(Icons.save),
-                        label: const Text("Kaydet"),
+                        icon: const Icon(Icons.save,color: Colors.white,),
+                        label: const Text("Kaydet",style: TextStyle(color: const Color(0xFFFFFFFF))),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
                       ),
                       ElevatedButton.icon(
                         onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close),
-                        label: const Text("İptal"),
+                        icon: const Icon(Icons.close,color: Colors.white,),
+                        label: const Text("İptal",style: TextStyle(color: const Color(0xFFFFFFFF))),
                         style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                       ),
                     ],
@@ -186,8 +187,8 @@ class _VetProfilePageState extends State<VetProfilePage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF9F6EE),
       appBar: AppBar(
-        title: const Text("Profilim"),
-        backgroundColor: const Color(0xFF81C784),
+        title: const Text("Profilim",style: TextStyle(color: const Color(0xFFFFFFFF))),
+        backgroundColor: const Color(0xFF22577A),
         elevation: 0,
         actions: [
           IconButton(
@@ -210,7 +211,7 @@ class _VetProfilePageState extends State<VetProfilePage> {
             Center(
               child: CircleAvatar(
                 radius: 60,
-                backgroundColor: const Color(0xFF81C784).withOpacity(0.4),
+                backgroundColor: const Color(0xFF22577A).withOpacity(0.4),
                 backgroundImage: _getProfileImage(),
                 child: (_getProfileImage() is AssetImage) ? const Icon(Icons.person, size: 60, color: Colors.white) : null,
               ),
@@ -240,7 +241,7 @@ class _VetProfilePageState extends State<VetProfilePage> {
               icon: const Icon(Icons.edit, color: Colors.white),
               label: const Text("Profili Düzenle", style: TextStyle(color: Colors.white)),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF81C784),
+                  backgroundColor: const Color(0xFF22577A),
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
             ),
@@ -259,7 +260,7 @@ class _VetProfilePageState extends State<VetProfilePage> {
   Widget _buildInfoRow(IconData icon, String label, String value) {
     return Row(
       children: [
-        Icon(icon, color: const Color(0xFF81C784)),
+        Icon(icon, color: const Color(0xFF22577A)),
         const SizedBox(width: 12),
         Expanded(child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.brown))),
         Text(value, style: const TextStyle(color: Colors.black87)),
