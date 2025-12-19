@@ -62,7 +62,7 @@ class _AdminDashboardState extends State<AdminPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE),
+      backgroundColor: const Color(0xFFECE8D9),
       appBar: AppBar(
         title: const Text("Yönetim Paneli"),
         backgroundColor: const Color(0xFF4E342E),

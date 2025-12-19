@@ -59,10 +59,10 @@ class _AdminAppointmentManagementPageState extends State<AdminAppointmentManagem
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE),
+      backgroundColor: const Color(0xFFECE8D9),
       appBar: AppBar(
-        title: const Text("Sistem Randevuları"),
-        backgroundColor: Colors.indigo,
+        title: const Text("Sistem Randevuları", style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF4E342E),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
