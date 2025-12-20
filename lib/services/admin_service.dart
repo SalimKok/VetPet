@@ -120,4 +120,13 @@ class AdminService {
       return false;
     }
   }
+
+  Future<bool> deleteAnyAppointment(int id) async {
+    try {
+      final response = await http.delete(Uri.parse('${ApiService.baseUrl}/admin/appointments/$id'));
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
 }
