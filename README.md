@@ -39,14 +39,14 @@ PetVet, evcil hayvan sahipleri ile veteriner hekimleri tek bir platformda buluş
 - 
 
 🛠️ Teknoloji YığınıUygulama, modern yazılım mimarileri ve performanslı teknolojiler üzerine inşa edilmiştir:
+Hasta Arşivi: Kliniğe kayıtlı tüm petlerin sağlık geçmişine tek tıkla erişim, hızlı teşhis imkanı.
 
- Katman	            Teknoloji
-Frontend	        Flutter (Dart)
-Backend	          Python (Flask)
-Veritabanı	      PostgreSQL
-ORM	              SQLAlchemy
-Yerel Depolama  	SharedPreferences
-Tasarım Dili	    Minimalist Navy & Cream Theme
+- Frontend: Flutter (Dart)
+- Backend: Python (Flask)
+- Veritabanı: PostgreSQL
+- ORM: SQLAlchemy
+- Yerel Depolama: SharedPreferences
+- Tasarım Dili: Minimalist Navy & Cream Theme
 
 
 🎨 Tasarım Anlayışı
