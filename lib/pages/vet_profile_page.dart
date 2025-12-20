@@ -39,14 +39,14 @@ class _VetProfilePageState extends State<VetProfilePage> {
     }
   }
 
-  ImageProvider _getProfileImage() {
+  ImageProvider? _getProfileImage() {
     if (profileData != null && profileData!["photo_url"] != null && profileData!["photo_url"].isNotEmpty) {
       final url = profileData!["photo_url"].startsWith('http')
           ? profileData!["photo_url"]
           : "${ApiService.baseUrl}${profileData!["photo_url"]}";
       return NetworkImage(url);
     }
-    return const AssetImage('assets/default_profile.png');
+    return null;
   }
 
   void _logout() {
@@ -84,11 +84,11 @@ class _VetProfilePageState extends State<VetProfilePage> {
                     children: [
                       CircleAvatar(
                         radius: 50,
-                        backgroundColor:const Color(0xFF22577A).withOpacity(0.4),
+                        backgroundColor: const Color(0xFF22577A).withOpacity(0.4),
                         backgroundImage: selectedImage != null
                             ? FileImage(selectedImage!)
-                            : (_getProfileImage() as ImageProvider),
-                        child: (selectedImage == null && profileData!["photo_url"] == null)
+                            : _getProfileImage(),
+                        child: (selectedImage == null && _getProfileImage() == null)
                             ? const Icon(Icons.person, size: 50, color: Colors.white)
                             : null,
                       ),
@@ -119,19 +119,74 @@ class _VetProfilePageState extends State<VetProfilePage> {
                     children: [
                       ElevatedButton.icon(
                         onPressed: () async {
+                          final String name = nameController.text.trim();
+                          final String email = emailController.text.trim();
+                          final String phone = phoneController.text.trim();
+
+                          // Boş alan var mı?
+                          if (name.isEmpty || email.isEmpty || phone.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text("Lütfen tüm alanları doldurun!"),
+                                behavior: SnackBarBehavior.floating,
+                                margin: EdgeInsets.only(
+                                  bottom: MediaQuery.of(context).viewInsets.bottom + 450,
+                                  right: 20,
+                                  left: 20,
+                                ),
+                              ),
+                            );
+                            return; // Hata varsa burada dur, aşağıya geçme
+                          }
+
+                          // Email düzgün mü?
+                          bool isValidEmail = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+                          if (!isValidEmail) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text("Geçerli bir e-posta adresi giriniz!"),
+                                behavior: SnackBarBehavior.floating,
+                                margin: EdgeInsets.only(
+                                  bottom: MediaQuery.of(context).viewInsets.bottom + 450,
+                                  right: 20,
+                                  left: 20,
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          // Telefon numarası çok mu kısa?
+                          if (phone.length < 10) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text("Telefon numarası en az 10 haneli olmalıdır!"),
+                                behavior: SnackBarBehavior.floating,
+                                margin: EdgeInsets.only(
+                                  bottom: MediaQuery.of(context).viewInsets.bottom + 450,
+                                  right: 20,
+                                  left: 20,
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
                           final updatedData = {
-                            "name": nameController.text,
-                            "email": emailController.text,
-                            "phone": phoneController.text,
+                            "name": name,
+                            "email": email,
+                            "phone": phone,
                             "photo": selectedImage
                           };
+
                           final success = await UserService.updateUserProfile(widget.vetId, updatedData);
+
                           if (success) {
                             final updatedProfile = await UserService.getUserProfile(widget.vetId);
                             if (updatedProfile != null) {
                               setState(() => profileData = updatedProfile);
                             }
-                            Navigator.pop(context);
+                            Navigator.pop(context); // Modalı kapat
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text("Profil güncellendi!")),
                             );
@@ -213,7 +268,9 @@ class _VetProfilePageState extends State<VetProfilePage> {
                 radius: 60,
                 backgroundColor: const Color(0xFF22577A).withOpacity(0.4),
                 backgroundImage: _getProfileImage(),
-                child: (_getProfileImage() is AssetImage) ? const Icon(Icons.person, size: 60, color: Colors.white) : null,
+                child: _getProfileImage() == null
+                    ? const Icon(Icons.person, size: 60, color: Colors.white)
+                    : null,
               ),
             ),
             const SizedBox(height: 16),
@@ -249,7 +306,7 @@ class _VetProfilePageState extends State<VetProfilePage> {
             TextButton.icon(
               onPressed: _logout,
               icon: const Icon(Icons.logout, color: Colors.brown),
-              label: const Text("Çıkış Yap", style: TextStyle(color: Colors.brown)),
+              label: const Text("Çıkış Yap",style: TextStyle(color: Colors.brown, fontWeight: FontWeight.w600, fontSize: 16),),
             ),
           ],
         ),
