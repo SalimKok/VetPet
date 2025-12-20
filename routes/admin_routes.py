@@ -163,3 +163,29 @@ def update_appointment_status_admin(appo_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
     
+# --- YENİ: RANDEVUYU SİSTEMDEN TAMAMEN SİL ---
+@admin_bp.route('/admin/appointments/<int:appo_id>', methods=['DELETE'])
+def delete_appointment_admin(appo_id):
+    """
+    Admin yetkisiyle bir randevuyu veritabanından tamamen siler.
+    """
+    try:
+        # 1. Silinecek randevuyu bul
+        appointment = Appointments.query.get(appo_id)
+        
+        if not appointment:
+            return jsonify({'message': 'Randevu bulunamadı'}), 404
+
+        # 2. Silme işlemini gerçekleştir
+        db.session.delete(appointment)
+        db.session.commit()
+
+        print(f"--- ADMIN: {appo_id} ID'li randevu silindi ---") # Debug log
+        return jsonify({'success': True, 'message': 'Randevu başarıyla sistemden silindi'}), 200
+
+    except Exception as e:
+        # Bir hata olursa işlemi geri al
+        db.session.rollback()
+        print(f"!!! ADMIN APPOINTMENT DELETE HATASI !!!: {e}")
+        return jsonify({'error': str(e)}), 500
+    
