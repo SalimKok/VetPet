@@ -35,7 +35,7 @@ class _AdminDashboardState extends State<AdminPage> {
 
       setState(() {
         stats = {
-          "total_users": data['total_users'],
+          "total_users": data['total_users']-1,
           "total_vets": data['total_vets'],
           "total_owners": data['total_owners'],
           "total_appointments": data['total_appointments']
