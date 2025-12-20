@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart';
 import '../services/auth_service.dart';
 
 class RegisterService {
@@ -10,11 +9,23 @@ class RegisterService {
     required String password,
     required String role,
   }) async {
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      _showMessage(context, 'Lütfen tüm alanları doldurun!');
+    // 1. Boş alan kontrolü
+    if (name.isEmpty || email.isEmpty || password.isEmpty || role.isEmpty) {
+      _showMessage(context, 'Lütfen tüm alanları doldurun ve bir rol seçin!');
       return;
     }
-
+    // 2. Email format kontrolü (Regex)
+    bool isValidEmail = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email);
+    if (!isValidEmail) {
+      _showMessage(context, 'Lütfen geçerli bir e-posta adresi giriniz!');
+      return;
+    }
+    // 3. Şifre uzunluk kontrolü
+    if (password.length < 6) {
+      _showMessage(context, 'Şifre en az 6 karakter olmalıdır!');
+      return;
+    }
+    // Sunucu isteği
     final res = await AuthService.register(name, email, password, role);
 
     if (res == null) {
@@ -22,18 +33,11 @@ class RegisterService {
       return;
     }
 
-    _showMessage(context, res['message'] ?? 'Kayıt başarısız!');
+    _showMessage(context, res['message'] ?? 'İşlem tamamlandı.');
   }
 
-  // ---------------- PRIVATE HELPERS ----------------
   static void _showMessage(BuildContext context, String text) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
   }
 
-  static void _navigateTo(BuildContext context, Widget page) {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => page),
-    );
-  }
 }
