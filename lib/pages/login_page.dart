@@ -38,17 +38,8 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  Future<void> _handleRememberMe(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
+  void _handleRememberMe(bool value) {
     setState(() => rememberMe = value);
-
-    if (value) {
-      await prefs.setString('saved_email', emailController.text.trim());
-      await prefs.setString('saved_password', passwordController.text.trim());
-    } else {
-      await prefs.remove('saved_email');
-      await prefs.remove('saved_password');
-    }
   }
 
   Widget _buildTextField({
@@ -84,14 +75,35 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _handleLogin() async {
+    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Lütfen tüm alanları doldurun!")),
+      );
+      return;
+    }
+
     setState(() => isLoading = true);
 
-    await LoginService.login(
+    // Giriş işlemini başlat
+    final loginSuccessful = await LoginService.login(
       context: context,
       email: emailController.text.trim(),
       password: passwordController.text.trim(),
       rememberMe: rememberMe,
     );
+
+    // EĞER GİRİŞ BAŞARILIYSA VE BENİ HATIRLA SEÇİLİYSE KAYDET
+    if (loginSuccessful == true) { // LoginService'in bool döndürdüğünü varsayıyoruz
+      final prefs = await SharedPreferences.getInstance();
+      if (rememberMe) {
+        await prefs.setString('saved_email', emailController.text.trim());
+        await prefs.setString('saved_password', passwordController.text.trim());
+      } else {
+        // Eğer işaretli değilse eski kayıtları temizle
+        await prefs.remove('saved_email');
+        await prefs.remove('saved_password');
+      }
+    }
 
     setState(() => isLoading = false);
   }
@@ -140,22 +152,29 @@ class _LoginPageState extends State<LoginPage> {
               icon: Icons.lock_rounded,
               isPassword: true,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
 
             Row(
               children: [
-                Checkbox(
-                  value: rememberMe,
-                  activeColor: const Color(0xFF81C784),
+                SizedBox(
+                  height: 24,
+                  width: 24,
+                  child: Checkbox(
+                    value: rememberMe,
+                    activeColor: Colors.green, // Lacivert temana uygun
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
                     onChanged: (bool? value) {
-                      if (value != null) {
-                        _handleRememberMe(value);
-                      }
+                      if (value != null) _handleRememberMe(value);
                     },
+                  ),
                 ),
-                const Text(
-                  "Beni Hatırla",
-                  style: TextStyle(color: Colors.brown, fontSize: 16),
+                const SizedBox(width: 6),
+                GestureDetector(
+                  onTap: () => _handleRememberMe(!rememberMe), // Metne basınca da çalışsın
+                  child: const Text(
+                    "Beni Hatırla",
+                    style: TextStyle(color: Colors.brown, fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
                 ),
               ],
             ),
