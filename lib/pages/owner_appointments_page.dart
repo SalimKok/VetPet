@@ -36,76 +36,114 @@ class _AppointmentPageState extends State<AppointmentPage> {
     setState(() => isLoading = false);
   }
 
+  // --- Yardımcı Tasarım Widget'ları ---
+
   String _getStatusTR(String status) {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return '⏳ Onay Bekliyor';
-      case 'approved':
-        return '👍 Onaylandı';
-      case 'rejected':
-        return '❌ Reddedildi';
-      case 'completed':
-        return '✔️ Tamamlandı';
-      case 'cancelled':
-        return '🚫 İptal Edildi';
-      default:
-        return status;
+      case 'pending': return 'Onay Bekliyor';
+      case 'approved': return 'Onaylandı';
+      case 'rejected': return 'Reddedildi';
+      case 'completed': return 'Tamamlandı';
+      case 'cancelled': return 'İptal Edildi';
+      default: return status;
     }
   }
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return Colors.orange.shade800;
-      case 'approved':
-        return Colors.green.shade700;
+      case 'pending': return Colors.orange.shade800;
+      case 'approved': return Colors.green.shade700;
       case 'rejected':
-      case 'cancelled':
-        return Colors.red.shade700;
-      case 'completed':
-        return Colors.blue.shade700;
-      default:
-        return Colors.black87;
+      case 'cancelled': return Colors.red.shade700;
+      case 'completed': return Colors.blue.shade700;
+      default: return Colors.black87;
     }
   }
+
+  Widget _buildAppointmentDetail(IconData icon, String label, String value) {
+    return Row(
+      children: [
+        Icon(icon, size: 14, color: Colors.grey[600]),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: TextStyle(fontSize: 13, color: Colors.grey[600], fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontSize: 13, color: Colors.black87, fontWeight: FontWeight.w600),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildStyledDropdown<T>({
+    required T? value,
+    required String label,
+    required IconData icon,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      child: DropdownButtonFormField<T>(
+        value: value,
+        items: items,
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF22577A)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+          filled: true,
+          fillColor: Colors.transparent,
+        ),
+      ),
+    );
+  }
+
+  // --- Randevu Ekleme/Düzenleme Penceresi ---
 
   Future<void> _showAddOrEditAppointmentDialog({Map<String, dynamic>? appointment}) async {
     int? selectedPetId = appointment?['pet_id'];
     int? selectedVetId = appointment?['vet_id'];
     DateTime? selectedDate = appointment != null ? DateTime.parse(appointment['date']) : null;
-    String reason = appointment?['reason'] ?? '';
+    final TextEditingController reasonController = TextEditingController(text: appointment?['reason'] ?? '');
 
     await showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(appointment == null ? "Yeni Randevu" : "Randevu Düzenle"),
+        builder: (context, setModalState) => AlertDialog(
+          backgroundColor: const Color(0xFFECE8D9),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Text(
+            appointment == null ? "Yeni Randevu" : "Randevuyu Düzenle",
+            style: const TextStyle(color: Color(0xFF22577A), fontWeight: FontWeight.bold),
+          ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                DropdownButtonFormField<int>(
+                _buildStyledDropdown<int>(
                   value: selectedPetId,
-                  decoration: const InputDecoration(labelText: "Evcil Hayvan"),
-                  items: pets.map((pet) => DropdownMenuItem<int>(
-                    value: pet['id'],
-                    child: Text(pet['name']),
-                  )).toList(),
-                  onChanged: (val) => selectedPetId = val,
+                  label: "Evcil Hayvan",
+                  icon: Icons.pets,
+                  items: pets.map((p) => DropdownMenuItem(value: p['id'] as int, child: Text(p['name']))).toList(),
+                  onChanged: (val) => setModalState(() => selectedPetId = val),
                 ),
-                const SizedBox(height: 10),
-                DropdownButtonFormField<int>(
+                _buildStyledDropdown<int>(
                   value: selectedVetId,
-                  decoration: const InputDecoration(labelText: "Veteriner"),
-                  items: vets.map((vet) => DropdownMenuItem<int>(
-                    value: vet['id'],
-                    child: Text(vet['name']),
-                  )).toList(),
-                  onChanged: (val) => selectedVetId = val,
+                  label: "Veteriner Hekim",
+                  icon: Icons.person,
+                  items: vets.map((v) => DropdownMenuItem(value: v['id'] as int, child: Text(v['name']))).toList(),
+                  onChanged: (val) => setModalState(() => selectedVetId = val),
                 ),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () async {
+                InkWell(
+                  onTap: () async {
                     final date = await showDatePicker(
                       context: context,
                       initialDate: selectedDate ?? DateTime.now(),
@@ -113,91 +151,59 @@ class _AppointmentPageState extends State<AppointmentPage> {
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
                     if (date != null) {
-                      final time = await showTimePicker(
-                        context: context,
-                        initialTime: selectedDate != null
-                            ? TimeOfDay.fromDateTime(selectedDate!)
-                            : TimeOfDay.now(),
-                      );
+                      final time = await showTimePicker(context: context, initialTime: TimeOfDay.now());
                       if (time != null) {
-                        setState(() {
-                          selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
-                        });
+                        setModalState(() => selectedDate = DateTime(date.year, date.month, date.day, time.hour, time.minute));
                       }
                     }
                   },
-                  child: Text(selectedDate != null
-                      ? DateFormat('yyyy-MM-dd – kk:mm').format(selectedDate!)
-                      : "Tarih ve Saat Seç"),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.calendar_month, color: Color(0xFF22577A)),
+                        const SizedBox(width: 12),
+                        Text(
+                          selectedDate != null ? DateFormat('dd/MM/yyyy - HH:mm').format(selectedDate!) : "Tarih ve Saat Seç",
+                          style: TextStyle(color: selectedDate == null ? Colors.grey : Colors.black87, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 10),
                 TextField(
-                  controller: TextEditingController(text: reason),
-                  decoration: const InputDecoration(labelText: "Sebep (opsiyonel)"),
-                  onChanged: (val) => reason = val,
+                  controller: reasonController,
+                  decoration: InputDecoration(
+                    labelText: "Sebep (opsiyonel)",
+                    prefixIcon: const Icon(Icons.notes, color: Color(0xFF22577A)),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
                 ),
               ],
             ),
           ),
           actions: [
-            if (appointment != null)
-              TextButton(
-                onPressed: () async {
-                  final success = await AppointmentService.deleteAppointment(appointment['id']);
-                  if (success) {
-                    Navigator.pop(context);
-                    _loadAppointments();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Randevu iptal edildi!")),
-                    );
-                  }
-                },
-                child: const Text("İptal Et"),
-              ),
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Kapat"),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text("Kapat", style: TextStyle(color: Colors.brown))),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF22577A), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
               onPressed: () async {
                 if (selectedPetId == null || selectedVetId == null || selectedDate == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Tüm zorunlu alanları doldurun!")),
-                  );
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tüm alanları doldurun!")));
                   return;
                 }
-
-                bool success;
-                if (appointment == null) {
-                  success = await AppointmentService.createAppointment(
-                    petId: selectedPetId!,
-                    ownerId: widget.ownerId,
-                    vetId: selectedVetId!,
-                    clinicId: null,
-                    date: selectedDate!,
-                    reason: reason,
-                  );
-                } else {
-                  success = await AppointmentService.updateAppointment(
-                    appointmentId: appointment['id'],
-                    date: selectedDate!,
-                    reason: reason,
-                  );
-                }
-
+                bool success = appointment == null
+                    ? await AppointmentService.createAppointment(petId: selectedPetId!, ownerId: widget.ownerId, vetId: selectedVetId!, clinicId: null, date: selectedDate!, reason: reasonController.text)
+                    : await AppointmentService.updateAppointment(appointmentId: appointment['id'], date: selectedDate!, reason: reasonController.text);
                 if (success) {
                   Navigator.pop(context);
                   _loadAppointments();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(appointment == null ? "Randevu oluşturuldu!" : "Randevu güncellendi!")),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("İşlem başarısız!")),
-                  );
                 }
               },
-              child: Text(appointment == null ? "Kaydet" : "Güncelle"),
+              child: Text(appointment == null ? "Kaydet" : "Güncelle", style: const TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -207,69 +213,89 @@ class _AppointmentPageState extends State<AppointmentPage> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) return const Center(child: CircularProgressIndicator());
     return Scaffold(
-      backgroundColor:const Color(0xFFECE8D9),
+      backgroundColor: const Color(0xFFECE8D9),
       appBar: AppBar(
-        title: const Text("Randevularım",style: TextStyle(color:  const Color(0xFFFFFFFF)),),
+        title: const Text("Randevularım", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF22577A),
         automaticallyImplyLeading: false,
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: Color(0xFF22577A)))
           : Column(
         children: [
           Expanded(
             child: appointments.isEmpty
-                ? const Center(child: Text("Henüz randevu yok!"))
+                ? const Center(child: Text("Henüz randevunuz bulunmuyor.", style: TextStyle(color: Colors.brown)))
                 : ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 10),
               itemCount: appointments.length,
               itemBuilder: (context, index) {
                 final a = appointments[index];
                 final petName = petNames[a['pet_id']] ?? 'Bilinmiyor';
                 final rawStatus = a['status'] ?? 'pending';
-
                 final statusTR = _getStatusTR(rawStatus);
-                final statusColor = _getStatusColor(rawStatus);
                 final bool isEditable = rawStatus == 'pending';
 
-                return Card(
+                return Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    title: Text(
-                      "Evcil Hayvan: $petName",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 5),
-                        Text("Veteriner: ${vetNames[a['vet_id']] ?? 'Bilinmiyor'}"),
-                        Text("Tarih: ${DateFormat('yyyy-MM-dd – HH:mm').format(DateTime.parse(a['date']))}"),
-                        if (a['reason'] != null && a['reason'].toString().isNotEmpty)
-                          Text("Sebep: ${a['reason']}"),
-                        const SizedBox(height: 5),
-                        Row(
-                          children: [
-                            const Text("Durum: "),
-                            Text(
-                              statusTR,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: statusColor,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        children: [
+                          Container(width: 6, color: _getStatusColor(rawStatus)),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(children: [
+                                        const Icon(Icons.pets, size: 18, color: Color(0xFF22577A)),
+                                        const SizedBox(width: 8),
+                                        Text(petName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF22577A))),
+                                      ]),
+                                      if (isEditable)
+                                        GestureDetector(
+                                          onTap: () => _showAddOrEditAppointmentDialog(appointment: a),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(6),
+                                            decoration: BoxDecoration(color: const Color(0xFF22577A).withOpacity(0.1), shape: BoxShape.circle),
+                                            child: const Icon(Icons.edit_rounded, size: 18, color: Color(0xFF22577A)),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  _buildAppointmentDetail(Icons.medical_services_outlined, "Hekim:", vetNames[a['vet_id']] ?? 'Bilinmiyor'),
+                                  const SizedBox(height: 6),
+                                  _buildAppointmentDetail(Icons.calendar_today_outlined, "Tarih:", DateFormat('dd MMMM yyyy – HH:mm').format(DateTime.parse(a['date']))),
+                                  if (a['reason'] != null && a['reason'].toString().isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    _buildAppointmentDetail(Icons.chat_bubble_outline_rounded, "Not:", a['reason']),
+                                  ],
+                                  const SizedBox(height: 14),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(color: _getStatusColor(rawStatus).withOpacity(0.1), borderRadius: BorderRadius.circular(30)),
+                                    child: Text(statusTR.toUpperCase(), style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: _getStatusColor(rawStatus), letterSpacing: 0.5)),
+                                  ),
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
-                    trailing: isEditable
-                        ? IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      tooltip: "Düzenle / İptal Et",
-                      onPressed: () => _showAddOrEditAppointmentDialog(appointment: a),
-                    )
-                        : null,
                   ),
                 );
               },
@@ -277,14 +303,19 @@ class _AppointmentPageState extends State<AppointmentPage> {
           ),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF22577A),
-                foregroundColor: const Color(0xFFFFFFFF),
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF22577A),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+                onPressed: () => _showAddOrEditAppointmentDialog(),
+                icon: const Icon(Icons.add),
+                label: const Text("Yeni Randevu Oluştur", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
               ),
-              onPressed: () => _showAddOrEditAppointmentDialog(),
-              child: const Text("Yeni Randevu Oluştur"),
             ),
           ),
         ],

@@ -14,12 +14,9 @@ class OwnerClinicSearchPage extends StatefulWidget {
 class _OwnerSearchPageState extends State<OwnerClinicSearchPage> {
   int? selectedCityId;
   int? selectedDistrictId;
-
   List<Map<String, dynamic>> cities = [];
   List<Map<String, dynamic>> districts = [];
   List<Map<String, dynamic>> foundClinics = [];
-
-  bool isLoadingLocations = false;
   bool isSearching = false;
   bool hasSearched = false;
 
@@ -30,9 +27,8 @@ class _OwnerSearchPageState extends State<OwnerClinicSearchPage> {
   }
 
   Future<void> _loadCities() async {
-    setState(() => isLoadingLocations = true);
     cities = await LocationService.getCities();
-    setState(() => isLoadingLocations = false);
+    setState(() {});
   }
 
   Future<void> _loadDistricts(int cityId) async {
@@ -43,174 +39,142 @@ class _OwnerSearchPageState extends State<OwnerClinicSearchPage> {
     });
   }
 
-  Future<void> _search() async {
-    if (selectedCityId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Lütfen en azından bir İl seçiniz.")),
-      );
-      return;
-    }
-
-    setState(() {
-      isSearching = true;
-      hasSearched = true;
-      foundClinics = [];
-    });
-
-    // Servise istek at
-    final results = await ClinicService.searchClinics(
-      cityId: selectedCityId,
-      districtId: selectedDistrictId,
+  // --- Yeni Modern Dropdown Tasarımı ---
+  Widget _buildCleanDropdown<T>({
+    required T? value,
+    required String hint,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          hint: Text(hint, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+          isExpanded: true,
+          items: items,
+          onChanged: onChanged,
+        ),
+      ),
     );
-
-    setState(() {
-      foundClinics = results;
-      isSearching = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFECE8D9),
+      backgroundColor: const Color(0xFFECE8D9), // Daha soft bir krem
       appBar: AppBar(
-        title: const Text("Klinik Bul",style: TextStyle(color:  const Color(0xFFFFFFFF))),
-        backgroundColor: const Color(0xFF22577A),
-        automaticallyImplyLeading: false,
+        title: const Text("Klinik Keşfet", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor:const Color(0xFF22577A),
+        elevation: 0,
+        centerTitle: true,
       ),
       body: Column(
         children: [
-          // --- FİLTRELEME ALANI ---
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.white,
+          // --- Filtreleme Alanı (Daha Hafif) ---
+          Padding(
+            padding: const EdgeInsets.all(20.0),
             child: Column(
               children: [
-                DropdownButtonFormField<int>(
+                _buildCleanDropdown<int>(
                   value: selectedCityId,
-                  decoration: const InputDecoration(
-                    labelText: "İl Seçiniz",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.location_city),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  ),
-                  items: cities.map((city) {
-                    return DropdownMenuItem<int>(
-                      value: city['id'],
-                      child: Text(city['name']),
-                    );
-                  }).toList(),
-                  onChanged: (val) async {
-                    setState(() {
-                      selectedCityId = val;
-                      districts = [];
-                      selectedDistrictId = null;
-                    });
-                    if (val != null) await _loadDistricts(val);
-                  },
-                ),
-                const SizedBox(height: 10),
-
-                DropdownButtonFormField<int>(
-                  value: selectedDistrictId,
-                  decoration: const InputDecoration(
-                    labelText: "İlçe Seçiniz (İsteğe Bağlı)",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.map),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  ),
-                  items: districts.map((dist) {
-                    return DropdownMenuItem<int>(
-                      value: dist['id'],
-                      child: Text(dist['name']),
-                    );
-                  }).toList(),
+                  hint: "Şehir Seçin",
+                  items: cities.map((c) => DropdownMenuItem(value: c['id'] as int, child: Text(c['name']))).toList(),
                   onChanged: (val) {
-                    setState(() => selectedDistrictId = val);
+                    setState(() => selectedCityId = val);
+                    if (val != null) _loadDistricts(val);
                   },
                 ),
-                const SizedBox(height: 40),
-
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: isSearching ? null : _search,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF22577A),
-                      foregroundColor: Colors.white,
+                const SizedBox(height: 12),
+                _buildCleanDropdown<int>(
+                  value: selectedDistrictId,
+                  hint: "İlçe Seçin (Opsiyonel)",
+                  items: districts.map((d) => DropdownMenuItem(value: d['id'] as int, child: Text(d['name']))).toList(),
+                  onChanged: (val) => setState(() => selectedDistrictId = val),
+                ),
+                const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: isSearching ? null : () async {
+                    if (selectedCityId == null) return;
+                    setState(() { isSearching = true; hasSearched = true; });
+                    foundClinics = await ClinicService.searchClinics(cityId: selectedCityId, districtId: selectedDistrictId);
+                    setState(() { isSearching = false; });
+                  },
+                  child: Container(
+                    height: 55,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF22577A),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    child: isSearching
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text("KLİNİK ARA", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: Center(
+                      child: isSearching
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text("Klinikleri Listele", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
+          // --- Sonuçlar ---
           Expanded(
-            child: isSearching
-                ? const Center(child: Text("Aranıyor..."))
-                : foundClinics.isEmpty
-                ? Center(
-              child: Text(
-                hasSearched
-                    ? "Aradığınız kriterlere uygun veteriner bulunamadı."
-                    : "Arama yapmak için yukarıdan seçim yapınız.",
-                style: const TextStyle(color: Colors.grey),
-              ),
-            )
+            child: foundClinics.isEmpty
+                ? _buildEmptyState()
                 : ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: foundClinics.length,
-              itemBuilder: (context, index) {
-                final c = foundClinics[index];
-
-                String locationStr = "${c['city_name']} / ${c['district_name']}";
-
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  elevation: 3,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.orange.shade100,
-                      child: const Icon(Icons.pets, color: Colors.orange),
-                    ),
-                    title: Text(
-                      c['name'],
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 4),
-                        Text("📍 $locationStr"),
-                        Text("🏠 ${c['address_details'] ?? ''}", style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-                        const SizedBox(height: 4),
-                        Text("📞 ${c['phone'] ?? 'Tel Yok'}"),
-                      ],
-                    ),
-                    trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ClinicDetailPage(
-                            clinic: c,
-                            ownerId: widget.ownerId,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
+              itemBuilder: (context, index) => _buildModernClinicCard(foundClinics[index]),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Opacity(
+        opacity: 0.5,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.location_on_outlined, size: 80, color: Color(0xFF22577A)),
+            const SizedBox(height: 10),
+            Text(hasSearched ? "Sonuç bulunamadı" : "Hadi, yakındaki kliniklere bakalım!", style: const TextStyle(color: Colors.brown)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModernClinicCard(Map<String, dynamic> c) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 8))],
+      ),
+      child: ListTile(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ClinicDetailPage(clinic: c, ownerId: widget.ownerId))),
+        contentPadding: const EdgeInsets.all(16),
+        leading: Container(
+          width: 50, height: 50,
+          decoration: BoxDecoration(color: const Color(0xFF22577A).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+          child: const Icon(Icons.local_hospital_rounded, color: Color(0xFF22577A)),
+        ),
+        title: Text(c['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFF22577A))),
+        subtitle: Text("${c['city_name']} / ${c['district_name']}", style: const TextStyle(fontSize: 13)),
+        trailing: const Icon(Icons.chevron_right, color: Colors.grey),
       ),
     );
   }

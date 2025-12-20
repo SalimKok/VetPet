@@ -80,7 +80,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF81C784),
+              primary: Color(0xFF22577A),
               onPrimary: Colors.white,
               onSurface: Colors.brown,
             ),
@@ -100,7 +100,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF81C784),
+              primary: Color(0xFF22577A),
               onSurface: Colors.brown,
             ),
           ),
@@ -162,10 +162,10 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE),
+      backgroundColor: const Color(0xFFECE8D9),
       appBar: AppBar(
-        title: const Text("Randevu Oluştur"),
-        backgroundColor: const Color(0xFF81C784),
+        title: const Text("Randevu Oluştur",style: TextStyle(color: Colors.white),),
+        backgroundColor: const Color(0xFF22577A),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
@@ -302,7 +302,7 @@ class _BookAppointmentPageState extends State<BookAppointmentPage> {
               child: ElevatedButton(
                 onPressed: isLoading ? null : _submitAppointment,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF81C784),
+                  backgroundColor: const Color(0xFF22577A),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 5,
                 ),

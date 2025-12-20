@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import 'book_appointment_page.dart';
 
 class ClinicDetailPage extends StatelessWidget {
@@ -10,37 +9,28 @@ class ClinicDetailPage extends StatelessWidget {
   const ClinicDetailPage({
     Key? key,
     required this.clinic,
-    required this.ownerId, // Constructor'a eklendi
+    required this.ownerId,
   }) : super(key: key);
 
   Future<void> _makePhoneCall(String phoneNumber) async {
     final cleanNumber = phoneNumber.replaceAll(RegExp(r'\s+'), '');
-
-    final Uri launchUri = Uri(
-      scheme: 'tel',
-      path: cleanNumber,
-    );
-
+    final Uri launchUri = Uri(scheme: 'tel', path: cleanNumber);
     try {
       await launchUrl(launchUri);
     } catch (e) {
-      print("Arama hatası: $e");
+      debugPrint("Arama hatası: $e");
     }
   }
 
   Future<void> _openMap(String address) async {
-    final query = Uri.encodeComponent(address);
-
-    final Uri googleMapsUrl = Uri.parse("https://www.google.com/maps/search/?api=1&query=$query");
-
+    final String googleMapsUrl = "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}";
+    final Uri url = Uri.parse(googleMapsUrl);
     try {
-      if (await canLaunchUrl(googleMapsUrl)) {
-        await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
-      } else {
-        await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
       }
     } catch (e) {
-      print("Harita açma hatası: $e");
+      debugPrint("Harita hatası: $e");
     }
   }
 
@@ -52,148 +42,164 @@ class ClinicDetailPage extends StatelessWidget {
     fullAddress += clinic['address_details'] ?? '';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF9F6EE),
+      backgroundColor: const Color(0xFFECE8D9), // Ana Tema Krem
       appBar: AppBar(
-        title: Text(clinic['name']),
-        backgroundColor: const Color(0xFF81C784),
+        title: Text(clinic['name'], style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        backgroundColor: const Color(0xFF22577A), // Ana Tema Lacivert
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const SizedBox(height: 8),
             Container(
-              width: double.infinity,
-              height: 200,
-              color: Colors.green.shade100,
-              child: Center(
-                child: Icon(
-                  Icons.local_hospital,
-                  size: 100,
-                  color: Colors.green.shade700,
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xFF22577A).withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
               ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
+                  const Icon(Icons.medical_services, size: 16, color: Color(0xFF22577A)),
+                  const SizedBox(width: 8),
                   Text(
-                    clinic['name'],
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.brown),
-                  ),
-                  const SizedBox(height: 8),
-
-                  Row(
-                    children: [
-                      const Icon(Icons.person, color: Colors.grey),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Vet. Hekim: ${clinic['vet_name'] ?? 'Belirtilmemiş'}",
-                        style: const TextStyle(fontSize: 16, color: Colors.black87),
-                      ),
-                    ],
-                  ),
-                  const Divider(height: 30),
-
-                  const Text("İletişim Bilgileri", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.location_on, color: Colors.red),
-                    title: Text(fullAddress),
-                  ),
-
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.phone, color: Colors.blue),
-                    title: Text(clinic['phone'] ?? "Numara Yok"),
-                  ),
-
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: const Icon(Icons.access_time, color: Colors.orange),
-                    title: Text(clinic['working_hours'] ?? "Belirtilmemiş"),
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  Row(
-                    children: [
-                      // ARAMA BUTONU
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            if (clinic['phone'] != null && clinic['phone'].isNotEmpty) {
-                              _makePhoneCall(clinic['phone']);
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Telefon numarası mevcut değil.")),
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.call),
-                          label: const Text("Hemen Ara"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-
-                      // YOL TARİFİ BUTONU
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            String queryAddress = "${clinic['name']} ${clinic['city_name'] ?? ''} ${clinic['district_name'] ?? ''}";
-                            _openMap(queryAddress);
-                          },
-                          icon: const Icon(Icons.map),
-                          label: const Text("Yol Tarifi"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 20),
-
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => BookAppointmentPage(
-                              clinicId: clinic['id'],
-                              clinicName: clinic['name'],
-                              vetId: clinic['vet_id'],
-                              vetName: clinic['vet_name'] ?? 'Hekim',
-                              currentUserId: ownerId,
-                            ),
-                          ),
-                        );
-                      },
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        side: const BorderSide(color: Colors.brown),
-                      ),
-                      child: const Text("Randevu Al", style: TextStyle(fontSize: 16, color: Colors.brown)),
-                    ),
+                    "Vet. Hekim: ${clinic['vet_name'] ?? 'Belirtilmemiş'}",
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF22577A)),
                   ),
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+
+            // Bilgi Kutusu
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4)),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildInfoTile(Icons.location_on_rounded, "ADRES", fullAddress, Colors.redAccent),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 15),
+                    child: Divider(color: Color(0xFFECE8D9)),
+                  ),
+                  _buildInfoTile(Icons.phone_rounded, "TELEFON", clinic['phone'] ?? "Numara Yok", Colors.blueAccent),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 15),
+                    child: Divider(color: Color(0xFFECE8D9)),
+                  ),
+                  _buildInfoTile(Icons.access_time_filled_rounded, "ÇALIŞMA SAATLERİ", clinic['working_hours'] ?? "Belirtilmemiş", Colors.orangeAccent),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Hızlı Aksiyon Butonları (Ara ve Yol Tarifi)
+            Row(
+              children: [
+                _buildCompactButton(
+                  icon: Icons.call,
+                  label: "Ara",
+                  color: Colors.green.shade600,
+                  onTap: () => clinic['phone'] != null ? _makePhoneCall(clinic['phone']) : null,
+                ),
+                const SizedBox(width: 12),
+                _buildCompactButton(
+                  icon: Icons.directions,
+                  label: "Yol Tarifi",
+                  color: Colors.blueAccent,
+                  onTap: () => _openMap("${clinic['name']} $fullAddress"),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            // Randevu Butonu
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => BookAppointmentPage(
+                        clinicId: clinic['id'],
+                        clinicName: clinic['name'],
+                        vetId: clinic['vet_id'],
+                        vetName: clinic['vet_name'] ?? 'Hekim',
+                        currentUserId: ownerId,
+                      ),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF22577A),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                  elevation: 2,
+                ),
+                child: const Text(
+                  "RANDEVU AL",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoTile(IconData icon, String label, String value, Color color) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: color, size: 24),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 1)),
+              const SizedBox(height: 4),
+              Text(value, style: const TextStyle(fontSize: 15, color: Colors.black87, fontWeight: FontWeight.w500)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCompactButton({required IconData icon, required String label, required Color color, required VoidCallback onTap}) {
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(15),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
+              Text(label, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ],
+          ),
         ),
       ),
     );

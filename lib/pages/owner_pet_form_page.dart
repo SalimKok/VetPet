@@ -38,6 +38,37 @@ class _PetFormPageState extends State<PetFormPage> {
     }
   }
 
+  // --- Yardımcı Widgetlar ---
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    int maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, color: const Color(0xFF22577A)),
+          labelText: label,
+          labelStyle: const TextStyle(color: Colors.brown),
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+        ),
+      ),
+    );
+  }
+
+  // --- Fonksiyonlar ---
+
   Future<void> _pickBirthday() async {
     final now = DateTime.now();
     final picked = await showDatePicker(
@@ -55,9 +86,21 @@ class _PetFormPageState extends State<PetFormPage> {
   }
 
   void _save() async {
+    final String name = nameController.text.trim();
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Lütfen pet ismini giriniz!")));
+      return;
+    }
+
+    if (RegExp(r'[0-9]').hasMatch(name)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("İsim alanı sayı içeremez!")));
+      return;
+    }
+
     final petData = {
       "owner_id": widget.ownerId,
-      "name": nameController.text.trim(),
+      "name": name,
       "species": speciesController.text.trim(),
       "breed": breedController.text.trim(),
       "notes": notesController.text.trim(),
@@ -65,30 +108,22 @@ class _PetFormPageState extends State<PetFormPage> {
       "photo_file": photoFile,
     };
 
-    bool success;
-    if (widget.pet != null) {
-      success = await PetService.updatePet(widget.pet!['id'], petData);
-    } else {
-      success = await PetService.addPet(petData);
-    }
+    bool success = widget.pet != null
+        ? await PetService.updatePet(widget.pet!['id'], petData)
+        : await PetService.addPet(petData);
 
     if (success) {
       Navigator.pop(context, true);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("İşlem başarısız!")),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("İşlem başarısız!")));
     }
   }
 
   ImageProvider? _getPetImage() {
-    if (photoFile != null) {
-      return FileImage(photoFile!);
-    } else if (widget.pet != null && widget.pet!['photo_url'] != null) {
+    if (photoFile != null) return FileImage(photoFile!);
+    if (widget.pet != null && widget.pet!['photo_url'] != null) {
       String url = widget.pet!['photo_url'];
-      if (!url.startsWith("http")) {
-        url = "${ApiService.baseUrl}$url";
-      }
+      if (!url.startsWith("http")) url = "${ApiService.baseUrl}$url";
       return NetworkImage(url);
     }
     return null;
@@ -97,50 +132,104 @@ class _PetFormPageState extends State<PetFormPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.pet != null ? "Pet Düzenle" : "Yeni Pet Ekle")),
+      backgroundColor: const Color(0xFFECE8D9),
+      appBar: AppBar(
+        title: Text(widget.pet != null ? "Pet Düzenle" : "Yeni Pet Ekle",
+            style: const TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF22577A),
+        elevation: 0,
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(24),
         child: Column(
           children: [
-            GestureDetector(
-              onTap: _pickPhoto,
-              child: CircleAvatar(
-                radius: 60,
-                backgroundColor: Colors.grey[300],
-                backgroundImage: _getPetImage(),
-                child: _getPetImage() == null
-                    ? const Icon(Icons.add_a_photo, size: 40, color: Colors.white)
-                    : null,
+            // Fotoğraf Bölümü
+            Center(
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 65,
+                    backgroundColor: const Color(0xFF22577A).withOpacity(0.2),
+                    backgroundImage: _getPetImage(),
+                    child: _getPetImage() == null
+                        ? const Icon(Icons.pets, size: 50, color: Colors.white)
+                        : null,
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: GestureDetector(
+                      onTap: _pickPhoto,
+                      child: const CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Color(0xFF22577A),
+                        child: Icon(Icons.camera_alt, size: 20, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(controller: nameController, decoration: const InputDecoration(labelText: "İsim")),
-            TextField(controller: speciesController, decoration: const InputDecoration(labelText: "Tür")),
-            TextField(controller: breedController, decoration: const InputDecoration(labelText: "Cins")),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Text("Doğum Tarihi: "),
-                Text(
-                  birthday != null
-                      ? "${birthday!.day}/${birthday!.month}/${birthday!.year}"
-                      : "Seçilmedi",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 30),
+
+            // Form Alanları
+            _buildTextField(controller: nameController, label: "Pet İsmi", icon: Icons.badge),
+            _buildTextField(controller: speciesController, label: "Tür (Kedi, Köpek vb.)", icon: Icons.category),
+            _buildTextField(controller: breedController, label: "Cins", icon: Icons.pets),
+
+            // Doğum Tarihi Seçici (Özel Tasarım)
+            GestureDetector(
+              onTap: _pickBirthday,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(15),
                 ),
-                const SizedBox(width: 10),
-                ElevatedButton(onPressed: _pickBirthday, child: const Text("Seç")),
-              ],
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today, color: Color(0xFF22577A)),
+                    const SizedBox(width: 12),
+                    const Text("Doğum Tarihi:", style: TextStyle(color: Colors.brown, fontSize: 16)),
+                    const Spacer(),
+                    Text(
+                      birthday != null ? "${birthday!.day}/${birthday!.month}/${birthday!.year}" : "Seçiniz",
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF22577A)),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            TextField(controller: notesController, decoration: const InputDecoration(labelText: "Notlar")),
+
+            _buildTextField(controller: notesController, label: "Notlar", icon: Icons.notes, maxLines: 3),
+
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: _save, child: const Text("Kaydet")),
+
+            // Kaydet Butonu
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _save,
+                icon: const Icon(Icons.save, color: Colors.white),
+                label: const Text("Kaydet", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF22577A),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                ),
+              ),
+            ),
+
+            // Silme Butonu (Sadece düzenlemede)
             if (widget.pet != null)
-              TextButton(
+              TextButton.icon(
                 onPressed: () async {
                   final deleted = await PetService.deletePet(widget.pet!['id']);
                   if (deleted) Navigator.pop(context, true);
                 },
-                child: const Text("Sil", style: TextStyle(color: Colors.red)),
+                icon: const Icon(Icons.delete, color: Colors.red),
+                label: const Text("Pet'i Sil", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
               ),
           ],
         ),
