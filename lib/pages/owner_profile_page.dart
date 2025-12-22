@@ -252,7 +252,7 @@ class _OwnerProfilePageState extends State<OwnerProfilePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsPage(userRole: "owner")),
+                MaterialPageRoute(builder: (context) => SettingsPage(userRole: "owner", userId: widget.ownerId)),
               );
             },
           ),
