@@ -252,7 +252,7 @@ class _VetProfilePageState extends State<VetProfilePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsPage(userRole: "vet")),
+                MaterialPageRoute(builder: (context) => SettingsPage(userRole: "vet", userId: widget.vetId)),
               );
             },
           ),
